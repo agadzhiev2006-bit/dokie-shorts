@@ -1,0 +1,48 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>@font-face{font-family:"Patrick Hand";src:url(fonts/PatrickHand-Regular.ttf)}*{margin:0;padding:0}body{background:#000}svg{display:block}</style></head><body>
+<svg id="sv"></svg>
+<script src="../tomorrow/man.js"></script><script src="../tomorrow/rig.js"></script><script src="style2.js"></script>
+<script>
+const Rr=(x,y,w,h,c,rx=0,ex="")=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${c}" ${ex}/>`;
+const ACC="#ffb36e";
+/* clock with a highlighted 5-minute wedge */
+function clock5(cx,cy,r,o={}){const a0=-90*D, a1=-60*D, p=(a,rr)=>[cx+Math.cos(a)*rr,cy+Math.sin(a)*rr];
+  let s=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${o.face||"#d9dce1"}" stroke="${o.rim||"#3b3e44"}" stroke-width="${r*.07}"/>`;
+  s+=`<path d="M${cx},${cy} L${f(p(a0,r*.9))} A${r*.9},${r*.9} 0 0 1 ${f(p(a1,r*.9))} Z" fill="${ACC}" opacity=".9"/>`;
+  for(let i=0;i<12;i++){const a=i*30*D; s+=`<path d="M${f(p(a,r*.78))} L${f(p(a,r*.9))}" stroke="#3b3e44" stroke-width="${r*.035}" stroke-linecap="round"/>`;}
+  s+=`<path d="M${cx},${cy} L${f(p(a1,r*.72))}" stroke="#1b1c1f" stroke-width="${r*.05}" stroke-linecap="round"/><path d="M${cx},${cy} L${f(p(-90*D+.3,r*.45))}" stroke="#1b1c1f" stroke-width="${r*.07}" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="${r*.06}" fill="#1b1c1f"/>`;
+  return s;}
+function avatar(){const W=800;
+  let s=`<defs>${DEFS2}<radialGradient id="bg" cx=".5" cy=".42" r=".7"><stop offset="0" stop-color="#9aa0a9"/><stop offset="1" stop-color="#3b3f46"/></radialGradient><radialGradient id="warm" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${ACC}" stop-opacity=".55"/><stop offset="1" stop-color="${ACC}" stop-opacity="0"/></radialGradient></defs>`;
+  s+=Rr(0,0,W,W,"url(#bg)")+`<ellipse cx="400" cy="300" rx="330" ry="300" fill="url(#warm)"/>`;
+  s+=clock5(400,280,215);
+  const c=char2(400,960,1.55,{brow:.55,eyeY:-4,l:[230,1060],r:[570,1060]}); s+=c.s;
+  return {W,H:W,s};}
+function banner(){const W=2560,H=1440;
+  let s=`<defs>${DEFS2}<linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8e939c"/><stop offset="1" stop-color="#6c717a"/></linearGradient>
+   <linearGradient id="flr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4d53"/><stop offset="1" stop-color="#2c2e33"/></linearGradient>
+   <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d4a6e"/><stop offset="1" stop-color="#d9906a"/></linearGradient>
+   <radialGradient id="warm" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${ACC}" stop-opacity=".5"/><stop offset="1" stop-color="${ACC}" stop-opacity="0"/></radialGradient>
+   <radialGradient id="vig" cx=".5" cy=".5" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient></defs>`;
+  s+=Rr(0,0,W,H,"url(#wall)")+Rr(0,1040,W,400,"url(#flr)")+Rr(0,1022,W,22,"#a2a7af");
+  for(let i=0;i<64;i++) s+=Rr(i*40,0,2,1022,"#878c95");
+  /* window far left (TV-only area), shelf far right */
+  s+=Rr(120,330,360,420,"url(#dusk)");
+  for(let i=0;i<8;i++){const bx=120+i*45, bh=100+hash(i*2.1)*180; s+=Rr(bx,750-bh,42,bh,"#2a2f42"); for(let j=0;j<Math.floor(bh/32);j++) if(hash(i*7+j)>.5) s+=Rr(bx+14,750-bh+12+j*32,10,14,"#f2c879");}
+  s+=`<rect x="120" y="330" width="360" height="420" fill="none" stroke="#c8ccd2" stroke-width="14"/><path d="M300,330 V750" stroke="#c8ccd2" stroke-width="10"/>`;
+  s+=Rr(2050,520,360,12,"#5b5f67",3); for(let i=0;i<11;i++){const h=50+hash(i*3.9)*40; s+=Rr(2064+i*28,520-h,22,h,["#6b7a8f","#8a6f62","#5f7d6e","#9a9da4","#7a6a8a"][i%5],3);}
+  /* safe area 1546x423 centred: x 507..2053, y 508..931 */
+  s+=`<ellipse cx="800" cy="680" rx="420" ry="340" fill="url(#warm)"/>`;
+  s+=clock5(610,640,105);
+  const c=char2(860,1010,.98,{brow:.55,eyeY:8,l:[815,880],r:[905,880],tilt:-3}); s+=c.s;
+  s+=`<g transform="translate(860 872) rotate(-6)">${Rr(-26,-44,52,88,"#151719",9)}${Rr(-22,-40,44,80,"#7fc1ff",6)}</g><ellipse cx="860" cy="850" rx="120" ry="90" fill="#9fd2ff" opacity=".12" filter="url(#sh2)" style="mix-blend-mode:screen"/>`;
+  s+=`<polygon points="600,915 1120,915 1170,960 550,960" fill="#8b8f97"/>${Rr(550,960,620,90,"#5a5e66")}${Rr(550,960,620,8,"#a6aab1")}<polygon points="660,925 860,925 872,950 648,950" fill="#2e3136"/>`;
+  /* title */
+  const TT=(y,str,sz)=>`<text x="1160" y="${y}" font-family="Inter Display,Inter" font-weight="900" font-size="${sz}" letter-spacing="3" fill="#f3ead6" stroke="#1f2023" stroke-width="${sz*.12}" paint-order="stroke">${str}</text>`;
+  s+=TT(650,"YOU IN",118)+TT(775,`<tspan fill="${ACC}">5</tspan> MINUTES`,118)+Rr(1166,805,260,8,ACC,4);
+  s+=`<text x="1162" y="875" font-family="Patrick Hand" font-size="50" fill="#e9e4d8" stroke="#1f2023" stroke-width="8" paint-order="stroke">Short films about the life you're living.</text>`;
+  s+=Rr(0,0,W,H,"url(#vig)");
+  return {W,H,s};}
+const m=new URLSearchParams(location.search).get("m"); const o=m==="b"?banner():avatar();
+const sv=document.getElementById("sv"); sv.setAttribute("width",o.W); sv.setAttribute("height",o.H); sv.innerHTML=o.s;
+</script></body></html>
