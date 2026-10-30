@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>*{margin:0;padding:0}html,body{width:1920px;height:1080px;overflow:hidden;background:#000;font-family:"Inter Display",Inter,sans-serif}
+#cam{position:absolute;inset:0}svg{position:absolute;left:0;top:0}
+#grain{position:absolute;inset:0;opacity:.09;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(85% 85% at 50% 50%,transparent 50%,rgba(0,0,0,.55) 100%)}
+#fade{position:absolute;inset:0;background:#000;opacity:0}#flash{position:absolute;inset:0;background:#fff;opacity:0}
+</style></head><body>
+<div id="cam"><svg id="sv" width="1920" height="1080"><defs>
+ <filter id="bl3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>
+ <filter id="bl1"><feGaussianBlur stdDeviation="8"/></filter>
+ <filter id="led" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <radialGradient id="gPh" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#8fc8ff" stop-opacity=".75"/><stop offset="1" stop-color="#8fc8ff" stop-opacity="0"/></radialGradient>
+ <radialGradient id="gLamp" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffd59a" stop-opacity=".7"/><stop offset="1" stop-color="#ffd59a" stop-opacity="0"/></radialGradient>
+ <linearGradient id="gCone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".55"/><stop offset="1" stop-color="#ffd9a0" stop-opacity=".05"/></linearGradient>
+</defs><g id="w"></g></svg></div>
+<div id="vig"></div><div id="grain"></div>
+<svg id="ov" width="1920" height="1080"></svg>
+<div id="fade"></div><div id="flash"></div>
+<script src="../tomorrow/man.js"></script><script src="../tomorrow/rig.js"></script><script src="scenes.js"></script>
+<script>render(+(new URLSearchParams(location.search).get("t")||0));</script>
+</body></html>
