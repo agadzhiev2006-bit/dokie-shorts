@@ -7,7 +7,7 @@ const R=(x,y,w,h,c,rx=0,ex="")=>`<rect x="${x}" y="${y}" width="${w}" height="${
 /* ---------- stickman silhouette ---------- */
 /* hip at (x,y); angles: 0 = down, 90 = right. f/b arms [upper,fore], lf/lb legs [thigh,knee]. fW/bW = world IK targets */
 function fig(x,y,s,P={},dir=1){
-  P=Object.assign({lean:0,tilt:0,f:[18,8],b:[-14,-6],lf:[6,-2],lb:[-6,2],bob:0,col:INK,hunch:0,thin:1,brow:.5,eyes:1},P);
+  P=Object.assign({lean:0,tilt:0,f:[18,8],b:[-14,-6],lf:[6,-2],lb:[-6,2],bob:0,col:INK,hunch:0,thin:1,brow:(window.BROW??.5),eyes:1},P);
   const c=P.col, hip=[0,P.bob], la=P.lean*D;
   const T=add(hip,[Math.sin(la)*112,-Math.cos(la)*112]), S=add(hip,[Math.sin(la)*96,-Math.cos(la)*96]);
   const na=(P.lean+P.hunch)*D, N=add(T,[Math.sin(na)*10,-Math.cos(na)*10]);
@@ -31,9 +31,9 @@ function fig(x,y,s,P={},dir=1){
   /* face: eyes + brows (side-ish: shifted toward facing dir) */
   if(P.eyes){const R0=(px,py)=>{const cs=Math.cos(ca),sn=Math.sin(ca);return [C[0]+px*cs-py*sn, C[1]+px*sn+py*cs];};
     const ey=P.eyeY||0, eh=6.5*(1-(P.blink||0));
-    for(const ex of [6,30]){const sd=ex<18?1:-1, e=R0(ex,2+ey), bi=R0(ex+sd*11,-13-P.brow*9), bo=R0(ex-sd*11,-13+P.brow*4), bm=R0(ex,-16-P.brow*3);
+    for(const ex of [6,30]){const sd=ex<18?1:-1, e=R0(ex,2+ey), bi=R0(ex+sd*6,-14-P.brow*7), bo=R0(ex-sd*7,-14+P.brow*3), bm=R0(ex-sd*1,-17-P.brow*2);
       g+=`<ellipse cx="${e[0].toFixed(1)}" cy="${e[1].toFixed(1)}" rx="5" ry="${Math.max(.8,eh).toFixed(1)}" fill="#efe8d6" transform="rotate(${(P.lean+P.hunch+P.tilt)} ${e[0].toFixed(1)} ${e[1].toFixed(1)})"/>`;
-      const [L,Rr]=ex<18?[bo,bi]:[bi,bo]; g+=`<path d="M${f(ex<18?bo:bi)} Q${f(bm)} ${f(ex<18?bi:bo)}" stroke="#8b9098" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;}}
+      const [L,Rr]=ex<18?[bo,bi]:[bi,bo]; g+=`<path d="M${f(ex<18?bo:bi)} Q${f(bm)} ${f(ex<18?bi:bo)}" stroke="#8b9098" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;}}
   if(P.veil) g+=`<path d="M${f(add(C,[-8,-38]))} Q${f(add(C,[-80,50]))} ${f(add(C,[-56,170]))} L${f(add(C,[14,40]))} Z" fill="#e8e8ea" opacity=".85"/>`;
   if(P.ph) g+=`<rect x="${hf[0]-10}" y="${hf[1]-30}" width="20" height="36" rx="4" fill="#1b1b1f" stroke="${P.ph>.5?"#bfe0ff":"#333"}" stroke-width="3" transform="rotate(${P.phr||0} ${hf[0]} ${hf[1]})"/>`;
   g+=armS(S,ef,hf);
@@ -56,7 +56,7 @@ const mixG=(a,b,k)=>{const A=GR[a],B=GR[b],h=x=>[1,3,5].map(i=>parseInt(x.substr
 
 /* ---------- props ---------- */
 function handS(p,ang=0,type="point",sc=1,rim="#b8bdc5"){const o=`fill="${INK}" stroke="${rim}" stroke-width="${5/sc}"`;
-  return `<g transform="translate(${p[0]} ${p[1]}) rotate(${ang}) scale(${sc})"><rect x="-40" y="10" width="80" height="800" rx="34" ${o}/><rect x="-50" y="-44" width="100" height="96" rx="42" ${o}/>${type==="point"?`<rect x="-16" y="-130" width="32" height="104" rx="16" ${o}/>`:type==="open"?[-36,-12,12,36].map(dx=>`<rect x="${dx-11}" y="-128" width="22" height="100" rx="11" ${o}/>`).join(""):""}</g>`;}
+  return `<g transform="translate(${p[0]} ${p[1]}) rotate(${ang}) scale(${sc})"><rect x="-40" y="10" width="80" height="800" rx="34" ${o}/><rect x="-50" y="-44" width="100" height="96" rx="42" ${o}/>${type==="point"?`<rect x="-16" y="-130" width="32" height="104" rx="16" ${o}/>`:type==="open"?[-36,-12,12,36].map(dx=>`<rect x="${dx-11}" y="-128" width="22" height="100" rx="11" ${o}/>`).join("")+`<rect x="34" y="-66" width="26" height="86" rx="13" transform="rotate(30 40 18)" ${o}/>`:""}</g>`;}
 function phoneBig(cx,cy,s,screen){return `<g transform="translate(${cx} ${cy}) scale(${s})"><rect x="-210" y="-410" width="420" height="820" rx="56" fill="#141416" stroke="#3a3a3e" stroke-width="10"/><svg x="-186" y="-380" width="372" height="760" viewBox="-186 -380 372 760"><rect x="-186" y="-380" width="372" height="760" rx="36" fill="#0d1120"/>${screen}</svg><rect x="-50" y="-372" width="100" height="22" rx="11" fill="#000"/></g>`;}
 function feed(scroll){let s=""; for(let i=-1;i<9;i++){const y=-360+i*300-(scroll%300), k=Math.floor(scroll/300)+i;
   s+=R(-170,y,340,280,"#1c2236",18)+R(-150,y+18,300,170,["#3b4566","#56406a","#3d5a5a","#5a4a3a"][((k%4)+4)%4],12)+R(-150,y+202,180,16,"#4a5272",8)+R(-150,y+230,120,14,"#39405c",7)+heart(120,y+225,.6,.9);
@@ -193,7 +193,7 @@ const fH1=t=>{const pr=t>1.05; let scr=T_(0,-170,"7:00",130,{c:"#fff",w:300})+T_
 SC.push([0,2,fH1,[960,540,1.1,1.2]]); say(1.05,2,"5 more minutes.");
 /* H2 desk -> phone (2-4) */
 const fH2=t=>{let s=room(t,{sky:"eve",wc:[19,40],lap:0}); const ph=eio(Pr(t,2.5,3.2));
-  const m=fig(1220,731,1.15,Object.assign({},SITP,{fW:[lerp(1460,1290,ph),lerp(624,520,ph)],fBend:-1,bW:[1360,640],ph:ph>.6?1:0,tilt:ph*14}),1);
+  const m=fig(1220,731,1.15,Object.assign({},SITP,{fW:[lerp(1460,1330,ph),lerp(624,632,ph)],fBend:-1,bW:[1360,640],ph:ph>.6?1:0,tilt:ph*30,eyeY:ph*6}),1);
   s+=R(1440,618,40,10,"#1b1b1f",3,`opacity="${1-ph}"`)+m.s+(ph>.6?glow([m.C[0]+40,m.C[1]+10],120):""); return s+grade("eve");};
 SC.push([2,4,fH2,[1320,540,1.55,1.7]]); say(2.3,4,"5 minutes.");
 /* H3 night bed clock jumps (4-6) */
@@ -224,7 +224,7 @@ SC.push([16,24,t=>{const k=t<18?0:t<20?1:t<22?2:3, str=["7:05","7:10","7:35","7:
 /* 1c jumps out, panic (24-32) */
 SC.push([24,32,t=>{let s=room(t,{sky:"day",clock:"7:35"}); if(t<24.6){s+=inBed(t).s;}
   else {const k=Pr(t,24.6,31.8), x=lerp(450,1500,.5-.5*Math.cos(k*Math.PI*3)), dir=Math.sin(k*Math.PI*3)>0?1:-1;
-    s+=blanket().replace("Q320,640 420,646","Q330,690 420,700")+fig(x,606,1.3,Object.assign(RUN(t,13),{f:[140+Math.sin(t*20)*30,40],b:[-140+Math.cos(t*18)*30,-40],tilt:-10}),dir).s;
+    s+=blanket().replace("Q320,640 420,646","Q330,690 420,700")+fig(x,606,1.3,Object.assign(RUN(t,13),{f:[30+Math.sin(t*20)*25,150],b:[-30+Math.cos(t*18)*25,-150],tilt:-10}),dir).s;
     s+=`<path d="M${x-60},500 l-20,-30 M${x+60},500 l20,-30 M${x},470 l0,-36" stroke="${INK}" stroke-width="6" stroke-linecap="round" opacity="${.5+.5*Math.sin(t*16)}"/>`;}
   return s+grade("dawn");},[960,560,1.05,1.1]]);
 say(25,27.8,"Shit."); say(28.2,31.6,"SHIT.",{sz:80});
@@ -235,12 +235,12 @@ SC.push([40,50,t=>street(t,{sp:160})+fig(860,682,1.15,Object.assign(WALK(t,3.2,.
 say(42,49,"Tomorrow I'll wake up on time.");
 
 /* 2a desk, closed laptop (50-58) */
-const deskSit=(t,o={})=>{const ph=o.ph||0; return fig(1220,731,1.15,Object.assign({},SITP,{fW:ph?[1300,520]:[1400,630],fBend:-1,bW:[1360,640],ph:ph?1:0,tilt:ph?14:o.tilt||0}),1);};
+const deskSit=(t,o={})=>{const ph=o.ph||0; return fig(1220,731,1.15,Object.assign({},SITP,{fW:ph?[1330,632]:[1400,630],fBend:-1,bW:[1360,640],ph:ph?1:0,tilt:ph?30:o.tilt||0,eyeY:ph?6:0}),1);};
 SC.push([50,58,t=>{let s=room(t,{sky:"eve",wc:[19,lerp(0,10,Pr(t,50,58))]}); s+=deskSit(t,{tilt:8}).s; return s+grade("eve");},[1360,500,1.3,1.42]]);
 say(51,57.6,"Okay. In 5 minutes I start.");
 /* 2b picks phone, clock spins (58-66) */
 SC.push([58,66,t=>{const ph=eio(Pr(t,59,60)); let s=room(t,{sky:"eve",wc:[19+(t-58)*.6,(10+(t-58)*90)%60]});
-  const m=fig(1220,731,1.15,Object.assign({},SITP,{fW:[lerp(1460,1300,ph),lerp(624,520,ph)],fBend:-1,bW:[1360,640],ph:ph>.6?1:0,tilt:ph*14}),1);
+  const m=fig(1220,731,1.15,Object.assign({},SITP,{fW:[lerp(1460,1330,ph),lerp(624,632,ph)],fBend:-1,bW:[1360,640],ph:ph>.6?1:0,tilt:ph*30,eyeY:ph*6}),1);
   s+=R(1440,618,40,10,"#1b1b1f",3,`opacity="${ph>.1?0:1}"`)+m.s+(ph>.6?glow([m.C[0]+40,m.C[1]+10],130):""); return s+grade(mixG("eve","dim",Pr(t,60,66)));},[1300,470,1.15,1.3]]);
 /* 2c feed close-up (66-75) */
 SC.push([66,75,t=>{const sc=(t-66)*260+Math.sin(t*3)*30; let s=R(0,0,WW,HH,"#101218")+`<ellipse cx="960" cy="540" rx="560" ry="440" fill="#6fb8ff" opacity=".18" filter="url(#bl3)"/>`+phoneBig(960,560,1,feed(sc));
@@ -321,7 +321,7 @@ SC.push([214,220,t=>{let s=bench(t); const up=eio(Pr(t,214,215.2)), wk=Pr(t,215.
 
 /* 6a park run 5 min (220-230) */
 SC.push([220,230,t=>{const tired=t>225.6&&t<228; let s=park(t,{sp:tired?120:620,sun:.25});
-  s+=fig(900,682,1.15,tired?{lean:30,hunch:12,f:[30,-20],b:[20,-30],fW:[1000,720],bW:[985,720],lf:[-14,4],lb:[14,-4],bob:Math.sin(t*8)*4}:RUN(t,10),1).s;
+  s+=fig(900,682,1.15,tired?{lean:70,hunch:0,tilt:-45,f:[-31,-31],b:[-29,-29],lf:[14,-10],lb:[8,-4],bob:Math.sin(t*8)*3}:RUN(t,10),1).s;
   counter("5 MIN",fade(t,220.3,229.7),"#fff",110); return s+grade(mixG("dawn","sun",Pr(t,220,230)));},[960,560,1.0,1.06]]);
 say(220.6,223.6,"Just 5 minutes.");
 /* 6b phone in the other room (230-236) */
@@ -371,7 +371,7 @@ const DUR=300;
 const CUTS=SC.map(x=>x[0]).slice(1);
 const FADES=[[133.6,134.4],[139.2,140.6],[174.4,175.6],[219.4,220.6],[283.8,285]];
 function render(t){
-  TXT=""; CAMO=null; let out="", z=1, cx=960, cy=540;
+  TXT=""; CAMO=null; window.BROW=t<214?.5:t<220?.25:0; let out="", z=1, cx=960, cy=540;
   for(const [a,b,fn,c] of SC) if(t>=a&&t<b){out=fn(t); const k=eio(Pr(t,a,b)); z=lerp(c[2],c[3],k); cx=c[0]; cy=c[1]; break;}
   if(CAMO){[cx,cy,z]=CAMO;}
   cx=clamp(cx,960/z,1920-960/z); cy=clamp(cy,540/z,1080-540/z);
