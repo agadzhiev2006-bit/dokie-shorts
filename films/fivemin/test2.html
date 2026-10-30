@@ -1,0 +1,90 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>@font-face{font-family:"Patrick Hand";src:url(fonts/PatrickHand-Regular.ttf)}
+*{margin:0;padding:0}html,body{width:1920px;height:1080px;overflow:hidden;background:#000;font-family:Inter,sans-serif}
+svg{position:absolute;left:0;top:0}
+#grain{position:absolute;inset:0;opacity:.06;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+#vig{position:absolute;inset:0;background:radial-gradient(80% 80% at 50% 45%,transparent 45%,rgba(0,0,0,.5) 100%)}
+</style></head><body>
+<svg id="sv" width="1920" height="1080"></svg><div id="vig"></div><div id="grain"></div>
+<script src="../tomorrow/man.js"></script><script src="../tomorrow/rig.js"></script><script src="style2.js"></script>
+<script>
+const Rr=(x,y,w,h,c,rx=0,ex="")=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${c}" ${ex}/>`;
+const lg=(id,a,b,v=1)=>`<linearGradient id="${id}" x1="0" y1="0" x2="${v?0:1}" y2="${v?1:0}"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+function frameDesk(t){
+  let d=DEFS2+lg("wallB","#8d929b","#6f747d")+lg("wallL","#5d626b","#7a7f88",0)+lg("wallR","#7a7f88","#575c65",0)+lg("flr","#4a4c52","#2e3036")+lg("dusk","#3d4a6e","#d9906a")+lg("ceil","#9a9fa8","#7c818a")
+   +`<radialGradient id="lampG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffd8a0" stop-opacity=".55"/><stop offset="1" stop-color="#ffd8a0" stop-opacity="0"/></radialGradient>`
+   +`<radialGradient id="phG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#9fd2ff" stop-opacity=".9"/><stop offset="1" stop-color="#9fd2ff" stop-opacity="0"/></radialGradient>`;
+  let s=`<defs>${d}</defs>`;
+  /* one-point perspective room: back wall 360..1560 x 120..700 */
+  s+=`<polygon points="0,0 1920,0 1560,120 360,120" fill="url(#ceil)"/>`;
+  s+=`<polygon points="0,0 360,120 360,700 0,1080" fill="url(#wallL)"/><polygon points="1920,0 1560,120 1560,700 1920,1080" fill="url(#wallR)"/>`;
+  s+=Rr(360,120,1200,580,"url(#wallB)")+`<polygon points="360,700 1560,700 1920,1080 0,1080" fill="url(#flr)"/>`;
+  for(let i=1;i<9;i++){const xb=360+i*133, xf=lerp(0,1920,i/9); s+=`<path d="M${xb},700 L${xf},1080" stroke="#26282d" stroke-width="3" opacity=".5"/>`;}
+  s+=`<path d="M360,700 L1560,700" stroke="#3a3c42" stroke-width="6"/>`+Rr(360,684,1200,16,"#9ea3ab");
+  s+=`<path d="M360,120 L1560,120" stroke="#a9aeb6" stroke-width="5"/>`;
+  /* ceiling lamp strip */
+  s+=`<polygon points="860,40 1060,40 1040,70 880,70" fill="#c9ccd2" opacity=".6"/>`;
+  /* window back wall left: dusk city */
+  s+=Rr(450,200,420,330,"url(#dusk)");
+  for(let i=0;i<9;i++){const bx=450+i*47, bh=90+hash(i*2.7)*160; s+=Rr(bx,530-bh,44,bh,"#2a2f42"); for(let j=0;j<Math.floor(bh/30);j++) for(let q=0;q<2;q++) if(hash(i*11+j*3+q)>.55) s+=Rr(bx+8+q*18,530-bh+12+j*30,9,13,"#f2c879",0,`opacity=".85"`);}
+  s+=`<ellipse cx="740" cy="520" rx="200" ry="60" fill="#ffb880" opacity=".35" filter="url(#sh2)"/>`;
+  s+=`<rect x="450" y="200" width="420" height="330" fill="none" stroke="#c8ccd2" stroke-width="14"/><path d="M660,200 V530" stroke="#c8ccd2" stroke-width="10"/>`+Rr(430,528,460,16,"#b4b8bf",3);
+  s+=`<polygon points="520,200 600,200 470,530 450,530 450,440" fill="#fff" opacity=".08"/><polygon points="700,200 730,200 600,530 570,530" fill="#fff" opacity=".06"/>`;
+  /* shelf + books, poster, sticky note (colour accent) */
+  s+=Rr(1100,250,330,12,"#5b5f67",3); for(let i=0;i<10;i++){const h=50+hash(i*3.9)*38; s+=Rr(1112+i*24,250-h,20,h,["#6b7a8f","#8a6f62","#5f7d6e","#9a9da4","#7a6a8a"][i%5],3);}
+  s+=Rr(1290,190,46,60,"#a9adb4",4);
+  s+=`<g transform="translate(1180 370) rotate(-3)">${Rr(-78,-56,156,112,"#f2d36b",2)}${Rr(-78,-56,156,16,"rgba(0,0,0,.08)")}<text x="0" y="-2" text-anchor="middle" font-family="Patrick Hand" font-size="34" fill="#2b2a26">START</text><text x="0" y="34" text-anchor="middle" font-family="Patrick Hand" font-size="30" fill="#2b2a26">THE THING</text></g>`;
+  s+=`<g transform="translate(1400 400)">${Rr(-60,-80,120,160,"#5d6169",4)}${Rr(-50,-70,100,140,"#c7cbd1")}<path d="M-50,60 L-10,0 L20,40 L40,15 L50,30 L50,70 L-50,70 Z" fill="#8c939e"/></g>`;
+  /* lamp light pool on wall right */
+  s+=`<ellipse cx="1430" cy="560" rx="380" ry="300" fill="url(#lampG)" style="mix-blend-mode:screen"/>`;
+  /* character behind desk */
+  const ph=[960,735], c=char2(960,905,1.32,{brow:.8,eyeY:14,eyeX:0,l:[ph[0]-46,ph[1]+18],r:[ph[0]+46,ph[1]+18],tilt:-4});
+  s+=`<ellipse cx="960" cy="760" rx="220" ry="40" fill="#000" opacity=".35" filter="url(#sh2)"/>`+c.s;
+  /* phone in hands + blue light on face */
+  s+=`<g transform="translate(${ph[0]} ${ph[1]-6}) rotate(-6)">${Rr(-34,-58,68,116,"#151719",12)}${Rr(-29,-52,58,104,"#7fc1ff",8)}</g>`;
+  s+=`<ellipse cx="960" cy="610" rx="230" ry="200" fill="url(#phG)" opacity=".32" style="mix-blend-mode:screen"/>`;
+  /* desk (foreground) */
+  s+=`<polygon points="380,770 1540,770 1640,860 280,860" fill="#8b8f97"/><polygon points="380,770 1540,770 1545,778 375,778" fill="#b9bdc4"/>`+Rr(280,860,1360,230,"#5a5e66")+Rr(280,860,1360,10,"#a6aab1");
+  s+=`<polygon points="380,770 1540,770 1640,860 280,860" fill="#ffd8a0" opacity=".12"/>`;
+  /* closed laptop + mug */
+  s+=`<polygon points="520,800 820,800 840,836 500,836" fill="#2e3136"/><polygon points="500,836 840,836 840,846 500,846" fill="#1c1e22"/><path d="M640,812 h60" stroke="#4a4e55" stroke-width="4"/>`;
+  s+=`<g transform="translate(1280 790)">${Rr(-34,-56,68,76,"#d8dade",10)}<path d="M34,-38 q30,0 30,22 q0,22 -30,22" stroke="#d8dade" stroke-width="10" fill="none"/><path d="M-10,-70 q10,-14 0,-28 M10,-72 q10,-14 0,-28" stroke="#fff" stroke-width="4" fill="none" opacity=".35"/></g>`;
+  /* desk lamp right foreground */
+  s+=`<g transform="translate(1480 820)">${Rr(-50,-10,100,14,"#1f2125",6)}<path d="M0,-10 L-40,-200 L30,-260" stroke="#1f2125" stroke-width="14" fill="none" stroke-linejoin="round"/><path d="M8,-282 L110,-300 L118,-236 L22,-222 Z" fill="#1f2125"/><ellipse cx="80" cy="-226" rx="40" ry="10" fill="#ffe3b0"/></g>`;
+  /* foreground blurred plant (DOF) */
+  s+=`<g filter="url(#dof)" opacity=".95">${[[-30,1080,-20],[60,1100,-6],[150,1100,12],[0,1060,-40]].map(([x,y,r])=>`<path transform="translate(${x} ${y}) rotate(${r})" d="M0,0 Q-70,-260 20,-560 Q110,-260 0,0 Z" fill="#141618"/>`).join("")}${Rr(-60,940,360,200,"#1a1c20",30)}</g>`;
+  /* speech */
+  s+=say2(960,200,"5 minutes.",92);
+  return s;}
+
+function frameAlarm(t){
+  let s=`<defs>${DEFS2}${lg("wood","#6c6f75","#4d5056")}${lg("scr","#203157","#132040")}
+   <linearGradient id="beam" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd9a6" stop-opacity=".5"/><stop offset="1" stop-color="#ffd9a6" stop-opacity="0"/></linearGradient></defs>`;
+  s+=Rr(0,0,1920,1080,"url(#wood)");
+  for(let i=0;i<12;i++){const y=i*96+hash(i)*10; s+=`<path d="M0,${y} L1920,${y+6}" stroke="#3f4248" stroke-width="3" opacity=".7"/>`; for(let k=0;k<6;k++){const yy=y+14+k*13+hash(i*7+k)*5; s+=`<path d="M${hash(i+k)*400},${yy} Q${700+hash(k)*300},${yy+4} ${1300+hash(i*k)*600},${yy-2}" stroke="#80838a" stroke-width="2" fill="none" opacity=".16"/>`;}}
+  /* lamp base corner + coaster */
+  s+=`<circle cx="1720" cy="80" r="190" fill="#3e4146"/><circle cx="1720" cy="80" r="150" fill="none" stroke="#55585e" stroke-width="6"/>`;
+  s+=`<circle cx="330" cy="830" r="96" fill="#3a3d43" opacity=".9"/><circle cx="330" cy="830" r="70" fill="none" stroke="#4d5056" stroke-width="5"/>`;
+  /* morning beam */
+  s+=`<polygon points="0,0 900,0 1500,1080 300,1080" fill="url(#beam)" style="mix-blend-mode:screen"/>`;
+  /* phone */
+  s+=`<g transform="translate(1010 520) rotate(-6)"><rect x="-245" y="-490" width="520" height="1010" rx="70" fill="#000" opacity=".45" filter="url(#sh2)" transform="translate(26 30)"/>
+   ${Rr(-262,-500,524,1000,"#16181c",70)}${Rr(-246,-484,492,968,"url(#scr)",56)}${Rr(-60,-470,120,26,"#0b0c0f",13)}
+   <text x="0" y="-300" text-anchor="middle" font-family="Inter" font-weight="500" font-size="54" fill="#e8ecf4">Fri, Oct 30</text>
+   <text x="0" y="-80" text-anchor="middle" font-family="Inter" font-weight="400" font-size="250" fill="#fff">7:00</text>
+   <text x="0" y="20" text-anchor="middle" font-family="Inter" font-weight="800" font-size="52" letter-spacing="6" fill="#b9c8e6">WAKE UP</text>
+   ${Rr(-190,150,380,130,"#e9ecf1",65)}<text x="0" y="236" text-anchor="middle" font-family="Inter" font-weight="800" font-size="62" fill="#18213a">SNOOZE</text>
+   ${Rr(-130,330,260,100,"none",50,'stroke="#8ea3c9" stroke-width="4"')}<text x="0" y="398" text-anchor="middle" font-family="Inter" font-weight="500" font-size="48" fill="#b9c8e6">STOP</text>
+   <polygon points="-246,-484 -40,-484 -246,-120" fill="#fff" opacity=".05"/></g>`;
+  /* hand from bottom-left, pressing snooze */
+  const tip=[930,742];
+  s+=`<g filter="url(#rim)" transform="translate(${tip[0]} ${tip[1]}) rotate(38)">
+    <path d="M-70,90 L-60,700 L80,700 L76,90 Z" fill="${INK2}"/>
+    <path d="M-86,120 Q-96,10 -40,-10 L60,-14 Q100,-6 96,60 L84,140 Q0,170 -86,120 Z" fill="${INK2}"/>
+    ${[[-44,-8,70],[-6,-30,96],[32,-24,88],[64,-4,66]].map(([x,y,h])=>`<rect x="${x-17}" y="${y-h}" width="34" height="${h+30}" rx="17" fill="${INK2}"/>`).join("")}
+    <path d="M-86,90 Q-140,40 -126,-10 Q-110,-30 -80,10 L-60,40" fill="${INK2}"/></g>`;
+  s+=say2(400,330,"5 more",88)+say2(400,420,"minutes...",88);
+  return s;}
+window.render=f=>{document.getElementById("sv").innerHTML=(f==2?frameAlarm:frameDesk)(0);};
+render(+(new URLSearchParams(location.search).get("f")||1));
+</script></body></html>
