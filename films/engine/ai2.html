@@ -1,0 +1,56 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000;overflow:hidden}svg{display:block}
+text{font-family:"Inter Display","Inter";font-weight:900}</style></head><body>
+<svg id="sv" width="1080" height="1920" viewBox="0 0 1080 1920"></svg>
+<script src="man.js"></script>
+<script>
+const ORG="#ff8a1f",ORG2="#ffb347",TEAL="#14b8a6",TEAL2="#5eead4",YEL="#ffd23f",RED="#e5352b",GRN="#22c55e",INK="#0b0b0d";
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)), lin=(t,a,b)=>cl((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3), bk=x=>{const c=1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const pop=(t,a,d=.35)=>bk(lin(t,a,a+d));
+const ST={lean:0,tilt:0,b:[18,6],f:[-14,-6],lb:[-6,6],lf:[6,-6],bh:"open",fh:"open",ex:{}};
+const P=o=>Object.assign({},ST,o,{ex:Object.assign({},o.ex||{})});
+const POS={
+ idle:P({}),
+ cheer:P({b:[215,200],f:[140,165],bh:"open",fh:"open",tilt:-6,ex:{mouth:.8,brow:-6}}),
+ point:P({f:[95,90],fh:"point",ex:{mouth:.4}}),
+ thumb:P({f:[60,150],fh:"thumb",ex:{mouth:.6}}),
+ sad:P({lean:6,tilt:14,b:[4,0],f:[-4,0],bh:"open",fh:"open",ex:{brow:12,brow2:-4,look:-6,lid:10}}),
+ smug:P({f:[40,160],fh:"thumb",tilt:-4,ex:{lid:6,brow:4}}),
+ think:P({f:[30,175],fh:"point",tilt:8,ex:{look:6,brow:-8}}),
+ shrug:P({b:[240,270],f:[120,90],bh:"open",fh:"open",tilt:-10,ex:{brow:-10,mouth:.3}}),
+};
+function man(x,y,s,pose,t,flip=false,tint){const br=Math.sin(t*3.2)*6;
+ const p=Object.assign({},pose,{bob:br});
+ return `<g transform="translate(${x} ${y}) scale(${flip?-s:s} ${s}) translate(-540 -1665)">${manSVG(p)}</g>`}
+function bg(c1,c2,t){return `<defs><radialGradient id="g${c1.slice(1)}" cx=".5" cy=".42" r=".75"><stop offset="0" stop-color="${c2}"/><stop offset="1" stop-color="${c1}"/></radialGradient></defs>
+ <rect width="1080" height="1920" fill="url(#g${c1.slice(1)})"/>`+rays(t,c2)}
+function rays(t,c){let s=`<g transform="translate(540 820) rotate(${t*8})" opacity=".18">`;for(let i=0;i<12;i++)s+=`<path d="M0 0 L-90 -1500 L90 -1500 Z" fill="#fff" transform="rotate(${i*30})"/>`;return s+"</g>"}
+function badge(n,x,y,c,sc=1){return `<g transform="translate(${x} ${y}) scale(${sc})"><circle r="78" fill="${INK}" stroke="#fff" stroke-width="10"/><text y="34" text-anchor="middle" font-size="104" fill="${c}">${n}</text></g>`}
+function card(x,y,sc,txt,c=GRN,rot=0){return `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${sc})"><rect x="-230" y="-95" width="460" height="190" rx="34" fill="#fff" stroke="${INK}" stroke-width="10"/><rect x="-230" y="-95" width="460" height="56" rx="28" fill="${c}"/><rect x="-230" y="-60" width="460" height="22" fill="${c}"/><text x="-200" y="-55" font-size="34" fill="#fff">PAYCHECK</text><text y="66" text-anchor="middle" font-size="96" fill="${INK}">${txt}</text></g>`}
+function bubble(x,y,sc,txt,c="#fff"){return `<g transform="translate(${x} ${y}) scale(${sc})"><path d="M-250 -90 H250 Q290 -90 290 -50 V50 Q290 90 250 90 H-60 L-120 150 L-110 90 H-250 Q-290 90 -290 50 V-50 Q-290 -90 -250 -90Z" fill="${c}" stroke="${INK}" stroke-width="10"/><text y="26" text-anchor="middle" font-size="74" fill="${INK}">${txt}</text></g>`}
+function sneaker(x,y,sc,r=0){return `<g transform="translate(${x} ${y}) rotate(${r}) scale(${sc})"><path d="M-150 30 Q-150 -60 -90 -70 Q-40 -72 -20 -30 Q40 -10 120 0 Q160 10 160 45 L160 60 H-150Z" fill="${RED}" stroke="${INK}" stroke-width="10" stroke-linejoin="round"/><path d="M-150 45 H160" stroke="#fff" stroke-width="14"/><path d="M-40 -40 L-10 -10 M-20 -50 L10 -20" stroke="#fff" stroke-width="8"/></g>`}
+function plate(x,y,sc){return `<g transform="translate(${x} ${y}) scale(${sc})"><ellipse rx="160" ry="70" fill="#fff" stroke="${INK}" stroke-width="10"/><ellipse rx="100" ry="40" fill="${ORG2}" stroke="${INK}" stroke-width="6"/><path d="M-30 -20 Q0 -60 40 -18" stroke="${RED}" stroke-width="18" fill="none" stroke-linecap="round"/><path d="M200 -60 V60 M180 -60 V-10 M220 -60 V-10" stroke="${INK}" stroke-width="10" stroke-linecap="round"/></g>`}
+function coin(x,y,sc,r=0){return `<g transform="translate(${x} ${y}) rotate(${r}) scale(${sc})"><circle r="46" fill="${YEL}" stroke="${INK}" stroke-width="8"/><text y="22" text-anchor="middle" font-size="60" fill="${INK}">$</text></g>`}
+function wallet(x,y,sc,open){return `<g transform="translate(${x} ${y}) scale(${sc})"><rect x="-180" y="-110" width="360" height="220" rx="30" fill="#7c4a2a" stroke="${INK}" stroke-width="10"/><rect x="60" y="-40" width="140" height="80" rx="20" fill="#5a3420" stroke="${INK}" stroke-width="8"/><circle cx="110" r="12" fill="${YEL}"/>${open?`<path d="M-120 -160 q20 -40 0 -80 M-60 -150 q20 -40 0 -80" stroke="#fff" stroke-width="8" fill="none" opacity=".7"/>`:""}</g>`}
+function piggy(x,y,sc,fill){return `<g transform="translate(${x} ${y}) scale(${sc})"><ellipse rx="190" ry="150" fill="#ff9ec7" stroke="${INK}" stroke-width="10"/><path d="M-110 -120 L-80 -190 L-40 -135Z" fill="#ff9ec7" stroke="${INK}" stroke-width="10" stroke-linejoin="round"/><ellipse cx="185" cy="10" rx="45" ry="55" fill="#ff7fb2" stroke="${INK}" stroke-width="10"/><circle cx="175" cy="0" r="8" fill="${INK}"/><circle cx="195" cy="22" r="8" fill="${INK}"/><circle cx="110" cy="-50" r="14" fill="${INK}"/><rect x="-60" y="-160" width="120" height="20" rx="10" fill="${INK}"/><rect x="-120" y="120" width="50" height="70" rx="12" fill="#ff9ec7" stroke="${INK}" stroke-width="10"/><rect x="70" y="120" width="50" height="70" rx="12" fill="#ff9ec7" stroke="${INK}" stroke-width="10"/><text y="60" text-anchor="middle" font-size="64" fill="${INK}">${fill}</text></g>`}
+function bill(x,y,sc,txt,r=0){return `<g transform="translate(${x} ${y}) rotate(${r}) scale(${sc})"><rect x="-120" y="-150" width="240" height="300" rx="16" fill="#fff" stroke="${INK}" stroke-width="10"/><text y="-80" text-anchor="middle" font-size="46" fill="${RED}">${txt}</text><path d="M-80 -20 H80 M-80 30 H80 M-80 80 H30" stroke="#bbb" stroke-width="14" stroke-linecap="round"/></g>`}
+function bar(x,y,w,frac,c){return `<g transform="translate(${x} ${y})"><rect x="${-w/2}" y="-34" width="${w}" height="68" rx="34" fill="${INK}" opacity=".85"/><rect x="${-w/2+10}" y="-24" width="${Math.max(0,(w-20)*frac)}" height="48" rx="24" fill="${c}"/></g>`}
+function calendar(x,y,sc,d){return `<g transform="translate(${x} ${y}) scale(${sc})"><rect x="-150" y="-150" width="300" height="300" rx="30" fill="#fff" stroke="${INK}" stroke-width="10"/><rect x="-150" y="-150" width="300" height="90" rx="30" fill="${RED}"/><rect x="-150" y="-90" width="300" height="30" fill="${RED}"/><text y="100" text-anchor="middle" font-size="170" fill="${INK}">${d}</text></g>`}
+function burst(cx,cy,t,a,c=YEL,n=10){const p=lin(t,a,a+.5);if(p<=0||p>=1)return"";let s="";for(let i=0;i<n;i++){const an=i*36*Math.PI/180,r1=120+p*220,r2=r1+60*(1-p);s+=`<path d="M${cx+Math.cos(an)*r1} ${cy+Math.sin(an)*r1} L${cx+Math.cos(an)*r2} ${cy+Math.sin(an)*r2}" stroke="${c}" stroke-width="${16*(1-p)+2}" stroke-linecap="round"/>`}return s}
+function confetti(t,a){if(t<a)return"";let s="";const p=t-a;for(let i=0;i<26;i++){const x=(i*137)%1080,y=-60+p*(500+(i%5)*90)+ (i*53%300),r=p*200*(i%2?1:-1)+i*20;const c=[YEL,RED,TEAL2,"#fff",ORG][i%5];s+=`<rect x="${x}" y="${y}" width="22" height="34" fill="${c}" transform="rotate(${r} ${x} ${y})"/>`}return s}
+/* ---------- captions ---------- */
+function caption(t){const c=CAP.find(x=>t>=x[0]&&t<x[1]);if(!c)return"";
+ const k=pop(t,c[0],.18);const parts=c[2].split("~");let sp="";parts.forEach((p,i)=>{if(p)sp+=`<tspan fill="${i%2?YEL:"#fff"}">${p}</tspan>`});
+ const fs=Math.min(92,1560/c[2].replace(/~/g,"").length);
+ return `<g transform="translate(540 1780) scale(${k})"><text text-anchor="middle" font-size="${fs}" stroke="${INK}" stroke-width="18" stroke-linejoin="round" paint-order="stroke">${sp}</text></g>`}
+function render(t){const sc=SC.find(x=>t>=x[0]&&t<x[1])||SC[SC.length-1];
+ const L=t-sc[0],dur=sc[1]-sc[0];
+ let zoom=1+.05*(L/dur);let bt=BEATS.filter(b=>b<=t).pop();const pb=t-bt;if(pb<.25)zoom+=.05*(1-pb/.25);
+ let sh=pb<.18?(1-pb/.18)*14:0;const sx=Math.sin(t*90)*sh,sy=Math.cos(t*77)*sh;
+ let wx=0;if(L<.22&&sc[0]>0)wx=(1-eo(L/.22))*1080*(SC.indexOf(sc)%2?1:-1);
+ let s=`<g transform="translate(${540+sx+wx} ${960+sy}) scale(${zoom}) translate(-540 -960)">${sc[2](t)}</g>`;
+ if(L<.12&&sc[0]>0)s+=`<rect width="1080" height="1920" fill="#fff" opacity="${1-L/.12}"/>`;
+ s+=caption(t);
+ document.getElementById("sv").innerHTML=s}
+</script><script src="sc_ai.js"></script></body></html>
