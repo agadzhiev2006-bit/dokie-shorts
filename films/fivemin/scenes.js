@@ -7,26 +7,37 @@ const R=(x,y,w,h,c,rx=0,ex="")=>`<rect x="${x}" y="${y}" width="${w}" height="${
 /* ---------- stickman silhouette ---------- */
 /* hip at (x,y); angles: 0 = down, 90 = right. f/b arms [upper,fore], lf/lb legs [thigh,knee]. fW/bW = world IK targets */
 function fig(x,y,s,P={},dir=1){
-  P=Object.assign({lean:0,tilt:0,f:[18,8],b:[-14,-6],lf:[6,-2],lb:[-6,2],bob:0,col:INK,hunch:0,thin:1},P);
+  P=Object.assign({lean:0,tilt:0,f:[18,8],b:[-14,-6],lf:[6,-2],lb:[-6,2],bob:0,col:INK,hunch:0,thin:1,brow:.5,eyes:1},P);
   const c=P.col, hip=[0,P.bob], la=P.lean*D;
-  const T=add(hip,[Math.sin(la)*118,-Math.cos(la)*118]), S=add(hip,[Math.sin(la)*104,-Math.cos(la)*104]);
-  const na=(P.lean+P.hunch)*D, N=add(T,[Math.sin(na)*14,-Math.cos(na)*14]);
-  const ca=(P.lean+P.hunch+P.tilt)*D, C=add(N,[Math.sin(ca)*36,-Math.cos(ca)*36]);
+  const T=add(hip,[Math.sin(la)*112,-Math.cos(la)*112]), S=add(hip,[Math.sin(la)*96,-Math.cos(la)*96]);
+  const na=(P.lean+P.hunch)*D, N=add(T,[Math.sin(na)*10,-Math.cos(na)*10]);
+  const ca=(P.lean+P.hunch+P.tilt)*D, C=add(N,[Math.sin(ca)*44,-Math.cos(ca)*44]);
   const loc=w=>[(w[0]-x)/(s*dir),(w[1]-y)/s];
-  if(P.fW) P.f=ik(S,loc(P.fW),70,66,P.fBend??1);
-  if(P.bW) P.b=ik(S,loc(P.bW),70,66,P.bBend??1);
-  const arm=a=>{const e=add(S,v(a[0],70));return [e,add(e,v(a[1],66))]};
-  const leg=a=>{const k=add(hip,v(a[0],86));return [k,add(k,v(a[0]+a[1],86))]};
+  if(P.fW) P.f=ik(S,loc(P.fW),68,64,P.fBend??1);
+  if(P.bW) P.b=ik(S,loc(P.bW),68,64,P.bBend??1);
+  const arm=a=>{const e=add(S,v(a[0],68));return [e,add(e,v(a[1],64))]};
+  const leg=a=>{const k=add(hip,v(a[0],84));return [k,add(k,v(a[0]+a[1],84))]};
   const [eb,hb]=arm(P.b),[ef,hf]=arm(P.f),[kb,ab]=leg(P.lb),[kf,af]=leg(P.lf);
-  const Wd=13*P.thin, ft=P.lean<-60?[0,-15]:[15,0];
-  let g=ln([S,eb,hb],Wd,c)+ln([hip,kb,ab,add(ab,ft)],Wd+1,c)+ln([hip,S,N],Wd+4*P.thin,c)+ln([hip,kf,af,add(af,ft)],Wd+1,c);
-  if(P.belly) g+=`<ellipse cx="${lerp(hip[0],S[0],.4)+10}" cy="${lerp(hip[1],S[1],.4)}" rx="${18*P.belly}" ry="${24*P.belly}" fill="${c}"/>`;
-  g+=`<circle cx="${C[0].toFixed(1)}" cy="${C[1].toFixed(1)}" r="31" fill="${c}"/>`;
-  if(P.hat) g+=`<g transform="translate(${f(C)}) rotate(${P.lean+P.hunch+P.tilt})"><rect x="-44" y="-26" width="88" height="10" rx="5" fill="${c}"/><path d="M-26,-22 Q-26,-56 0,-58 Q26,-56 26,-22 Z" fill="${c}"/></g>`;
-  if(P.veil) g+=`<path d="M${f(add(C,[-6,-26]))} Q${f(add(C,[-60,40]))} ${f(add(C,[-40,140]))} L${f(add(C,[10,30]))} Z" fill="#e8e8ea" opacity=".85"/>`;
-  if(P.ph) g+=`<rect x="${hf[0]-9}" y="${hf[1]-26}" width="18" height="32" rx="4" fill="#1b1b1f" stroke="${P.ph>.5?"#bfe0ff":"#333"}" stroke-width="3" transform="rotate(${P.phr||0} ${hf[0]} ${hf[1]})"/>`;
-  g+=ln([S,ef,hf],Wd,c);
-  if(P.cane) g+=ln([hf,[hf[0]+10,P.cane]],7,c);
+  const th=P.thin, ft=P.lean<-60?[0,-14]:[16,0], RM='filter="url(#rim)"';
+  const armS=(sh,e,h)=>`<g ${RM}>${ln([sh,e,h],26*th,c)}<circle cx="${h[0].toFixed(1)}" cy="${h[1].toFixed(1)}" r="${17*th}" fill="${c}"/></g>`;
+  const legS=(k,an)=>`<g ${RM}>${ln([hip,k,an],30*th,c)}${ln([an,add(an,ft)],30*th,c)}</g>`;
+  let g=armS(S,eb,hb)+legS(kb,ab);
+  /* torso sack + head */
+  const tb=add(hip,[Math.sin(la)*8,-Math.cos(la)*8]), ts=add(hip,[Math.sin(la)*90,-Math.cos(la)*90]);
+  let body=ln([tb,ts],72*th,c)+(P.belly?`<ellipse cx="${lerp(hip[0],S[0],.4)+14}" cy="${lerp(hip[1],S[1],.4)}" rx="${26*P.belly}" ry="${30*P.belly}" fill="${c}"/>`:"")+`<circle cx="${C[0].toFixed(1)}" cy="${C[1].toFixed(1)}" r="46" fill="${c}"/>`;
+  if(P.hat) body+=`<g transform="translate(${f(C)}) rotate(${P.lean+P.hunch+P.tilt})"><rect x="-62" y="-38" width="124" height="13" rx="6" fill="${c}"/><path d="M-36,-32 Q-36,-80 0,-82 Q36,-80 36,-32 Z" fill="${c}"/></g>`;
+  g+=`<g ${RM}>${body}</g>`;
+  g+=legS(kf,af);
+  /* face: eyes + brows (side-ish: shifted toward facing dir) */
+  if(P.eyes){const R0=(px,py)=>{const cs=Math.cos(ca),sn=Math.sin(ca);return [C[0]+px*cs-py*sn, C[1]+px*sn+py*cs];};
+    const ey=P.eyeY||0, eh=6.5*(1-(P.blink||0));
+    for(const ex of [6,30]){const sd=ex<18?1:-1, e=R0(ex,2+ey), bi=R0(ex+sd*11,-13-P.brow*9), bo=R0(ex-sd*11,-13+P.brow*4), bm=R0(ex,-16-P.brow*3);
+      g+=`<ellipse cx="${e[0].toFixed(1)}" cy="${e[1].toFixed(1)}" rx="5" ry="${Math.max(.8,eh).toFixed(1)}" fill="#efe8d6" transform="rotate(${(P.lean+P.hunch+P.tilt)} ${e[0].toFixed(1)} ${e[1].toFixed(1)})"/>`;
+      const [L,Rr]=ex<18?[bo,bi]:[bi,bo]; g+=`<path d="M${f(ex<18?bo:bi)} Q${f(bm)} ${f(ex<18?bi:bo)}" stroke="#8b9098" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;}}
+  if(P.veil) g+=`<path d="M${f(add(C,[-8,-38]))} Q${f(add(C,[-80,50]))} ${f(add(C,[-56,170]))} L${f(add(C,[14,40]))} Z" fill="#e8e8ea" opacity=".85"/>`;
+  if(P.ph) g+=`<rect x="${hf[0]-10}" y="${hf[1]-30}" width="20" height="36" rx="4" fill="#1b1b1f" stroke="${P.ph>.5?"#bfe0ff":"#333"}" stroke-width="3" transform="rotate(${P.phr||0} ${hf[0]} ${hf[1]})"/>`;
+  g+=armS(S,ef,hf);
+  if(P.cane) g+=`<g ${RM}>${ln([hf,[hf[0]+10,P.cane]],8,c)}</g>`;
   const toWd=p=>[x+p[0]*s*dir,y+p[1]*s];
   return {s:`<g transform="translate(${x} ${y}) scale(${s*dir} ${s})">${g}</g>`,hf:toWd(hf),hb:toWd(hb),C:toWd(C),S:toWd(S)};}
 /* poses */
@@ -44,7 +55,7 @@ const mixG=(a,b,k)=>{const A=GR[a],B=GR[b],h=x=>[1,3,5].map(i=>parseInt(x.substr
   return ["#"+ca.map((v,i)=>Math.round(lerp(v,cb[i],k)).toString(16).padStart(2,"0")).join(""),lerp(A[1],B[1],k),lerp(A[2],B[2],k)];};
 
 /* ---------- props ---------- */
-function handS(p,ang=0,type="point",sc=1,rim="#3a3a40"){const o=`fill="${INK}" stroke="${rim}" stroke-width="${3/sc}"`;
+function handS(p,ang=0,type="point",sc=1,rim="#b8bdc5"){const o=`fill="${INK}" stroke="${rim}" stroke-width="${5/sc}"`;
   return `<g transform="translate(${p[0]} ${p[1]}) rotate(${ang}) scale(${sc})"><rect x="-40" y="10" width="80" height="800" rx="34" ${o}/><rect x="-50" y="-44" width="100" height="96" rx="42" ${o}/>${type==="point"?`<rect x="-16" y="-130" width="32" height="104" rx="16" ${o}/>`:type==="open"?[-36,-12,12,36].map(dx=>`<rect x="${dx-11}" y="-128" width="22" height="100" rx="11" ${o}/>`).join(""):""}</g>`;}
 function phoneBig(cx,cy,s,screen){return `<g transform="translate(${cx} ${cy}) scale(${s})"><rect x="-210" y="-410" width="420" height="820" rx="56" fill="#141416" stroke="#3a3a3e" stroke-width="10"/><svg x="-186" y="-380" width="372" height="760" viewBox="-186 -380 372 760"><rect x="-186" y="-380" width="372" height="760" rx="36" fill="#0d1120"/>${screen}</svg><rect x="-50" y="-372" width="100" height="22" rx="11" fill="#000"/></g>`;}
 function feed(scroll){let s=""; for(let i=-1;i<9;i++){const y=-360+i*300-(scroll%300), k=Math.floor(scroll/300)+i;

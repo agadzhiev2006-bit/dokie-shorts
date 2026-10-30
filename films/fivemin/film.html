@@ -7,6 +7,7 @@
 </style></head><body>
 <div id="cam"><svg id="sv" width="1920" height="1080"><defs>
  <filter id="bl3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>
+ <filter id="rim" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#b8bdc5"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
  <filter id="bl1"><feGaussianBlur stdDeviation="8"/></filter>
  <filter id="led" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
  <radialGradient id="gPh" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#8fc8ff" stop-opacity=".75"/><stop offset="1" stop-color="#8fc8ff" stop-opacity="0"/></radialGradient>
