@@ -58,6 +58,17 @@ s+=`<g transform="translate(0 2040) scale(1 -1)" opacity=".22" filter="url(#b8)"
 /* splash */
 for(let i=0;i<22;i++){const a=-Math.PI*(.05+hash2(i*2.3)*.9), d=50+hash2(i*5)*150; s+=`<circle cx="${900+Math.cos(a)*d*1.4}" cy="${1015+Math.sin(a)*d*.7}" r="${3+hash2(i)*8}" fill="#cfdcea" opacity=".85"/>`;}
 s+=`<ellipse cx="900" cy="1022" rx="120" ry="18" fill="none" stroke="#cfdcea" stroke-width="5" opacity=".7"/><ellipse cx="900" cy="1022" rx="200" ry="30" fill="none" stroke="#cfdcea" stroke-width="3" opacity=".35"/>`;
+/* hourglass: time running out */
+{const hx=1290, hy=860, w=120, h=200;
+ s+=`<ellipse cx="${hx}" cy="${hy+h/2+18}" rx="110" ry="16" fill="#000" opacity=".35" filter="url(#b8)"/><ellipse cx="${hx}" cy="${hy}" rx="160" ry="160" fill="#ffd38f" opacity=".18" filter="url(#b30)"/>`;
+ const top=hy-h/2+14, bot=hy+h/2-14;
+ s+=`<path d="M${hx-w/2+8},${top} Q${hx-w/2+8},${hy-26} ${hx-10},${hy-6} L${hx-10},${hy+6} Q${hx-w/2+8},${hy+26} ${hx-w/2+8},${bot} L${hx+w/2-8},${bot} Q${hx+w/2-8},${hy+26} ${hx+10},${hy+6} L${hx+10},${hy-6} Q${hx+w/2-8},${hy-26} ${hx+w/2-8},${top} Z" fill="#cfe0f0" opacity=".22" stroke="#e8f1fa" stroke-width="5"/>`;
+ s+=`<path d="M${hx-14},${hy-30} Q${hx},${hy-38} ${hx+14},${hy-30} L${hx+4},${hy-10} L${hx-4},${hy-10} Z" fill="${ACC}"/>`;
+ s+=`<rect x="${hx-2.5}" y="${hy-10}" width="5" height="${h/2-30}" fill="${ACC}"/>`;
+ s+=`<path d="M${hx-w/2+12},${bot} Q${hx-w/2+16},${bot-60} ${hx},${bot-78} Q${hx+w/2-16},${bot-60} ${hx+w/2-12},${bot} Z" fill="${ACC}"/><path d="M${hx-w/2+12},${bot} Q${hx-w/2+16},${bot-60} ${hx},${bot-78}" stroke="#ffc98a" stroke-width="4" fill="none" opacity=".7"/>`;
+ s+=`<path d="M${hx-w/2+18},${top+10} Q${hx-w/2+16},${hy-30} ${hx-18},${hy-14}" stroke="#fff" stroke-width="5" fill="none" opacity=".5" stroke-linecap="round"/>`;
+ s+=`${Rq(hx-w/2-14,hy-h/2-6,w+28,22,"#4a2e1c",8)}${Rq(hx-w/2-14,hy+h/2-16,w+28,22,"#4a2e1c",8)}${Rq(hx-w/2-6,hy-h/2+14,10,h-30,"#3b2416",4)}${Rq(hx+w/2-4,hy-h/2+14,10,h-30,"#3b2416",4)}`;
+}
 /* rain */
 for(let i=0;i<300;i++){const x=hash2(i*1.37)*2000-40, y=hash2(i*2.71)*1100-40, l=26+hash2(i*3.3)*44, inL=Math.abs(x-1050)<380&&y>200;
   s+=`<path d="M${x},${y} l${-l*.12},${l}" stroke="${inL?"#ffe6bd":"#c3ccd8"}" stroke-width="${hash2(i*9)>.85?3.5:2}" opacity="${inL?.6:.28}" stroke-linecap="round"/>`;}
