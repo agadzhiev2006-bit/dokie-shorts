@@ -1,0 +1,75 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>*{margin:0;padding:0}body{background:#000;width:1920px;height:1080px;overflow:hidden}svg{position:absolute;left:0;top:0}
+#grain{position:absolute;inset:0;opacity:.07;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}</style></head><body>
+<svg id="sv" width="1920" height="1080"></svg><div id="grain"></div>
+<script src="../tomorrow/man.js"></script><script src="../tomorrow/rig.js"></script><script src="scenes.js"></script>
+<script>
+const ACC="#ffb36e", Rq=(x,y,w,h,c,rx=0,ex="")=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${c}" ${ex}/>`;
+let s=`<defs>
+ <filter id="rim" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#c3c8d0"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter><filter id="blur20" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="20"/></filter><filter id="blur40" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="45"/></filter>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6d747f"/><stop offset="1" stop-color="#a9afb8"/></linearGradient>
+ <linearGradient id="road" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b616b"/><stop offset="1" stop-color="#2f333a"/></linearGradient>
+ <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9bec6" stop-opacity="0"/><stop offset=".6" stop-color="#b9bec6" stop-opacity=".55"/><stop offset="1" stop-color="#b9bec6" stop-opacity="0"/></linearGradient>
+ <radialGradient id="warm" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${ACC}" stop-opacity=".7"/><stop offset="1" stop-color="${ACC}" stop-opacity="0"/></radialGradient>
+ <radialGradient id="vig" cx=".5" cy=".5" r=".75"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".6"/></radialGradient>
+</defs>`;
+const VX=1180, VY=470; // vanishing point
+s+=Rq(0,0,1920,1080,"url(#sky)");
+/* buildings converging (left + right) */
+const bld=(side)=>{let r=""; for(let i=0;i<7;i++){const k0=i/7, k1=(i+.85)/7; const ex=side<0?0:1920;
+  const xa=lerp(ex,VX+side*60,Math.pow(k0,.8)), xb=lerp(ex,VX+side*60,Math.pow(k1,.8)), top=(k)=>lerp(-200-hash(i*3+side)*150,VY-40-hash(i+side)*40,Math.pow(k,.8)), bot=k=>lerp(1000,VY+70,Math.pow(k,.8));
+  const col=["#4c525c","#59606a","#515861","#636a74"][i%4];
+  r+=`<polygon points="${xa},${top(k0)} ${xb},${top(k1)} ${xb},${bot(k1)} ${xa},${bot(k0)}" fill="${col}"/>`;
+  for(let j=1;j<6;j++){const yy=k=>lerp(top(k),bot(k),j/6-.04); r+=`<polygon points="${lerp(xa,xb,.15)},${yy(k0)} ${lerp(xa,xb,.85)},${yy(k1)} ${lerp(xa,xb,.85)},${yy(k1)+lerp(40,6,k1)} ${lerp(xa,xb,.15)},${yy(k0)+lerp(46,7,k0)}" fill="${hash(i*13+j*7+side)>.75?"#e9c98a":"#3a3f47"}" opacity=".85"/>`;}}
+  return r;};
+s+=bld(-1)+bld(1);
+s+=`<rect x="0" y="${VY-180}" width="1920" height="420" fill="url(#fog)"/>`;
+/* road + sidewalk, wet */
+s+=`<polygon points="0,1080 1920,1080 ${VX+70},${VY+70} ${VX-70},${VY+70}" fill="url(#road)"/>`;
+for(let i=0;i<9;i++){const k=i/9, y=lerp(VY+80,1080,Math.pow(k,1.8)), w=lerp(4,60,Math.pow(k,1.8)); s+=Rq(VX-w/2+lerp(0,-200,Math.pow(k,1.8)),y,w,w*.25,"#d9dce0",2,`opacity=".55"`);}
+/* reflections of windows / lights in wet road */
+for(let i=0;i<14;i++){const x=hash(i*5.1)*1920, w=20+hash(i)*50; s+=Rq(x,760+hash(i*2)*120,w,260,i%3?"#8d939c":"#e9c98a",8,`opacity=".18" filter="url(#blur6)"`);}
+/* puddles */
+s+=`<ellipse cx="700" cy="1000" rx="430" ry="60" fill="#8f96a1" opacity=".45"/><ellipse cx="1420" cy="900" rx="220" ry="34" fill="#8f96a1" opacity=".35"/>`;
+/* street lamps */
+for(const [x,y,h] of [[110,1060,760],[1240,840,380]]) s+=Rq(x,y-h,14,h,"#2a2d33")+Rq(x-50,y-h,64,14,"#2a2d33",6)+`<ellipse cx="${x-30}" cy="${y-h+40}" rx="70" ry="90" fill="#ffe0aa" opacity=".25" filter="url(#blur20)"/>`;
+
+/* the running clock (time escaping) */
+const cx=1500, cy=640, CR=145;
+s+=`<ellipse cx="${cx}" cy="${cy}" rx="330" ry="300" fill="url(#warm)" filter="url(#blur20)"/>`;
+s+=`<g filter="url(#rim)"><path d="M${cx-40},${cy+CR-10} L${cx-90},${cy+CR+110} L${cx-140},${cy+CR+130}" stroke="#0d0d0f" stroke-width="22" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M${cx+40},${cy+CR-10} L${cx+110},${cy+CR+80} L${cx+170},${cy+CR+50}" stroke="#0d0d0f" stroke-width="22" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+const P=(a,r)=>[cx+Math.cos(a)*r,cy+Math.sin(a)*r];
+s+=`<g transform="rotate(10 ${cx} ${cy})"><circle cx="${cx}" cy="${cy}" r="${CR}" fill="#e3e6ea" stroke="#1b1c1f" stroke-width="16"/><path d="M${cx},${cy} L${f(P(-Math.PI/2,CR*.88))} A${CR*.88},${CR*.88} 0 0 1 ${f(P(-Math.PI/3,CR*.88))} Z" fill="${ACC}"/>`;
+for(let i=0;i<12;i++){const a=i*Math.PI/6; s+=`<path d="M${f(P(a,CR*.76))} L${f(P(a,CR*.88))}" stroke="#2a2b2f" stroke-width="7" stroke-linecap="round"/>`;}
+s+=`<path d="M${cx},${cy} L${f(P(-Math.PI/3,CR*.72))}" stroke="#1b1c1f" stroke-width="9" stroke-linecap="round"/><path d="M${cx},${cy} L${f(P(-Math.PI/2+.2,CR*.45))}" stroke="#1b1c1f" stroke-width="12" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="10" fill="#1b1c1f"/>
+ <rect x="${cx-18}" y="${cy-CR-38}" width="36" height="26" rx="6" fill="#1b1c1f"/><circle cx="${cx-95}" cy="${cy-CR+10}" r="26" fill="#1b1c1f"/><circle cx="${cx+95}" cy="${cy-CR+10}" r="26" fill="#1b1c1f"/></g>`;
+for(let i=0;i<3;i++) s+=`<path d="M${cx-CR-40-i*30},${cy-60+i*60} l-${90-i*15},0" stroke="#e8eaee" stroke-width="7" stroke-linecap="round" opacity=".6"/>`;
+
+/* the guy, running + reaching */
+window.BROW=.95;
+const hipX=640, hipY=690, sc=2.05;
+const pose=Object.assign(RUN(.62,1,1.25),{lean:20,tilt:-14,fW:[1210,600],fBend:1,brow:.95});
+const m=fig(hipX,hipY,sc,pose,1);
+s+=`<ellipse cx="${hipX+40}" cy="1030" rx="260" ry="34" fill="#000" opacity=".3" filter="url(#blur6)"/>`+m.s;
+/* wet: sheen streaks on body */
+s+=`<path d="M${m.C[0]-40},${m.C[1]-60} q30,-30 70,-20" stroke="#dfe6ee" stroke-width="7" fill="none" stroke-linecap="round" opacity=".7"/>`;
+/* water flying off head and body */
+for(let i=0;i<14;i++){const a=Math.PI*(.85+hash(i)*.6), d=120+hash(i*3)*120, x=m.C[0]+Math.cos(a)*d, y=m.C[1]+Math.sin(a)*d*.8, r=6+hash(i*7)*8;
+  s+=`<path transform="translate(${x} ${y}) rotate(${-60+hash(i)*40})" d="M0,${-r*1.8} Q${r},0 0,${r} Q${-r},0 0,${-r*1.8} Z" fill="#cfe3f4" opacity=".9"/>`;}
+/* sweat drops of panic */
+for(const [dx,dy] of [[70,-70],[95,-20]]) s+=`<path transform="translate(${m.C[0]+dx} ${m.C[1]+dy}) rotate(20)" d="M0,-24 Q14,0 0,12 Q-14,0 0,-24 Z" fill="#e8f2fb" stroke="#1b1c1f" stroke-width="3"/>`;
+/* splash at back foot */
+const sx=360, sy=1000;
+for(let i=0;i<16;i++){const a=-Math.PI*(.15+hash(i*2.3)*.7), d=60+hash(i*5)*170; s+=`<circle cx="${sx+Math.cos(a)*d}" cy="${sy+Math.sin(a)*d*.9}" r="${4+hash(i)*9}" fill="#d5e3ef" opacity=".85"/>`;}
+s+=`<ellipse cx="${sx}" cy="${sy+8}" rx="150" ry="22" fill="none" stroke="#d5e3ef" stroke-width="5" opacity=".7"/>`;
+/* rain */
+for(let i=0;i<260;i++){const x=hash(i*1.37)*2100-100, y=hash(i*2.71)*1100-40, l=30+hash(i*3.3)*50, near=hash(i*9)>.85;
+  s+=`<path d="M${x},${y} l${-l*.22},${l}" stroke="#e4e8ee" stroke-width="${near?4:2}" opacity="${near?.55:.3}" stroke-linecap="round"/>`;}
+s+=Rq(0,0,1920,1080,"#5f7590",0,`opacity=".18" style="mix-blend-mode:multiply"`);
+s+=Rq(0,0,1920,1080,"url(#vig)");
+/* text */
+s+=`<text x="1840" y="200" text-anchor="end" font-family="Inter Display,Inter" font-weight="900" font-size="150" letter-spacing="2" fill="#f3ead6" stroke="#141518" stroke-width="20" paint-order="stroke"><tspan fill="${ACC}">5</tspan> MORE</text>
+<text x="1840" y="350" text-anchor="end" font-family="Inter Display,Inter" font-weight="900" font-size="150" letter-spacing="2" fill="#f3ead6" stroke="#141518" stroke-width="20" paint-order="stroke">MINUTES</text>`;
+document.getElementById("sv").innerHTML=s;
+</script></body></html>
