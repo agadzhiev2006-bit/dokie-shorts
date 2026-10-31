@@ -1,0 +1,10 @@
+const { chromium } = require('playwright');
+(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1080,height:1920}});
+await p.goto('file:///home/claude/work/ep/short.html');await p.waitForTimeout(300);
+await p.evaluate(()=>{render(0.6); document.getElementById('cap').style.display='none';
+ document.getElementById('cam').style.transform='none';
+ let s=split(0.25);
+ s+=`<rect x="0" y="0" width="1080" height="520" fill="#fff" opacity=".0"/>`;
+ s+=G(540,270,1,`${TXT(0,0,"WHO'S",190,{w:900,c:INK})}${TXT(0,170,"LYING?",190,{w:900,c:RED,serif:0})}`,{r:-3});
+ document.getElementById('gl').innerHTML=s;});
+await p.screenshot({path:'/home/claude/work/ep/cover.png'});await b.close();})();

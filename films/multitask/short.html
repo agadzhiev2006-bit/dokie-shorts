@@ -1,0 +1,254 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#f7f6f3;font-family:"Inter Display",Inter,sans-serif;color:#0b0b0d}
+#st{position:relative;width:1080px;height:1920px;overflow:hidden;background:#f7f6f3}
+#cam{position:absolute;inset:0;transform-origin:540px 900px}
+svg{position:absolute;left:0;top:0;overflow:visible}
+#cap{position:absolute;left:60px;right:60px;top:225px;text-align:center;font-size:76px;line-height:1.1;font-weight:700;letter-spacing:-.01em;
+ text-shadow:0 0 18px #fff,0 0 8px #fff,0 0 3px #fff}
+#cap span{display:inline-block;margin:0 .12em;will-change:transform}
+#cap .ac{font-family:Caladea,Georgia,serif;font-style:italic;font-weight:700;font-size:1.1em;color:#e5352b}
+#cap .bl{font-family:Caladea,Georgia,serif;font-style:italic;font-weight:700;font-size:1.1em;color:#1f6feb}
+#cap .em{font-family:Caladea,Georgia,serif;font-style:italic;font-weight:700;font-size:1.1em}
+#grain{position:absolute;inset:0;opacity:.05;mix-blend-mode:multiply;pointer-events:none;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+</style></head><body><div id="st"><div id="cam">
+<svg id="gfx" width="1080" height="1920"><defs>
+ <filter id="ds" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-opacity=".22"/></filter>
+ <filter id="msh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="10" dy="22" stdDeviation="18" flood-opacity=".24"/></filter>
+ <filter id="bl"><feGaussianBlur stdDeviation="30"/></filter>
+</defs><g id="gl"></g></svg>
+<div id="cap"></div>
+</div><div id="grain"></div><div id="flash"></div></div>
+<script src="man.js"></script><script src="po.js"></script><script src="words.js"></script>
+<script>
+const SPEED=1.05; // voice is sped up 5% in the mix; all times below are in original-voice seconds
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)), Pr=(t,a,b)=>clamp((t-a)/(b-a)), lerp=(a,b,p)=>a+(b-a)*p;
+const eio=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}, eo=x=>1-Math.pow(1-clamp(x),3);
+const eob=x=>{x=clamp(x);const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const hash=n=>{const s=Math.sin(n*127.1)*43758.5453;return s-Math.floor(s)};
+const pop=(t,t0,d=.35)=>eob(Pr(t,t0,t0+d));
+const INK="#0b0b0d", GR="#8b8c90", RED="#e5352b", BLU="#1f6feb", RL="#ffe1dd", BL="#dce8ff";
+const TXT=(x,y,s,sz,o={})=>`<text x="${x}" y="${y}" text-anchor="${o.a||"middle"}" font-family="${o.serif?"Caladea,Georgia,serif":"Inter Display,Inter,sans-serif"}" ${o.serif?'font-style="italic"':""} font-weight="${o.w||700}" font-size="${sz}" fill="${o.c||INK}" letter-spacing="${o.ls||0}" opacity="${o.op??1}">${s}</text>`;
+const G=(x,y,sc,inner,o={})=>`<g transform="translate(${x} ${y}) rotate(${o.r||0}) scale(${sc})" opacity="${o.op??1}">${inner}</g>`;
+const draw=(len,p)=>`stroke-dasharray="${len}" stroke-dashoffset="${(len*(1-clamp(p))).toFixed(1)}"`;
+const pillC=(txt,w,col,sz=42,tc="#fff")=>`<rect x="${-w/2}" y="-46" width="${w}" height="92" rx="46" fill="${col}" filter="url(#ds)"/>${TXT(0,15,txt,sz,{c:tc,w:800,ls:3})}`;
+const card=(inner,col=INK,sz=200)=>`<rect x="${-sz/2}" y="${-sz/2}" width="${sz}" height="${sz}" rx="${sz*.22}" fill="#fff" stroke="${col}" stroke-width="10" filter="url(#ds)"/>${inner}`;
+const badge=(n)=>`<g transform="translate(78 -78)"><circle r="34" fill="${RED}" stroke="#fff" stroke-width="6"/>${TXT(0,13,n,36,{c:"#fff",w:800})}</g>`;
+const IC={
+ phone:(c=INK)=>`<rect x="-40" y="-70" width="80" height="140" rx="18" fill="${c}"/><rect x="-30" y="-54" width="60" height="96" rx="6" fill="#fff"/><circle cy="56" r="6" fill="#fff"/><rect x="-22" y="-40" width="34" height="14" rx="7" fill="${c}"/><rect x="-10" y="-18" width="32" height="14" rx="7" fill="${GR}"/>`,
+ mail:(c=INK)=>`<rect x="-70" y="-48" width="140" height="96" rx="12" fill="${c}"/><path d="M-62,-40 L0,8 L62,-40" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round"/>`,
+ tv:(c=INK)=>`<rect x="-74" y="-50" width="148" height="100" rx="14" fill="${c}"/><rect x="-60" y="-38" width="120" height="76" rx="6" fill="#fff"/><path d="M-12,-16 L16,0 L-12,16 Z" fill="${c}"/><path d="M-30,66 L30,66" stroke="${c}" stroke-width="10" stroke-linecap="round"/>`,
+ lap:(c=INK)=>`<rect x="-70" y="-56" width="140" height="92" rx="10" fill="${c}"/><rect x="-58" y="-45" width="116" height="70" rx="4" fill="#fff"/><path d="M-40,-25 L20,-25 M-40,-5 L36,-5 M-40,13 L8,13" stroke="${c}" stroke-width="8" stroke-linecap="round"/><path d="M-92,46 L92,46" stroke="${c}" stroke-width="14" stroke-linecap="round"/>`,
+ music:(c=INK)=>`<path d="M-24,44 L-24,-50 L44,-64 L44,30" fill="none" stroke="${c}" stroke-width="12" stroke-linejoin="round"/><ellipse cx="-40" cy="46" rx="22" ry="17" fill="${c}"/><ellipse cx="28" cy="32" rx="22" ry="17" fill="${c}"/>`,
+ chat:(c=INK)=>`<path d="M-70,-50 Q-70,-66 -54,-66 L54,-66 Q70,-66 70,-50 L70,14 Q70,30 54,30 L-6,30 L-40,62 L-32,30 L-54,30 Q-70,30 -70,14 Z" fill="${c}"/><circle cx="-30" cy="-18" r="9" fill="#fff"/><circle cx="0" cy="-18" r="9" fill="#fff"/><circle cx="30" cy="-18" r="9" fill="#fff"/>`
+};
+const BRAINF=[`M0,-128 C-22,-80 22,-40 0,0 C-22,40 22,84 0,128`,`M-110,-60 C-80,-50 -70,-20 -92,10`,`M-62,40 C-30,30 -20,70 -50,92`,`M62,-74 C92,-62 102,-30 80,-8`,`M72,40 C102,40 112,70 92,92`,`M-60,-100 C-50,-80 -30,-78 -20,-90`];
+function brain(p=1,fill="#fff",sw=12){return `<g fill="${fill}" stroke="${INK}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">
+   <path d="M-150,20 C-170,-60 -110,-130 -40,-120 C-10,-160 60,-150 80,-110 C150,-110 180,-40 160,10 C190,60 150,120 90,110 C60,150 -20,150 -40,115 C-120,130 -170,80 -150,20 Z" ${draw(1300,p)} fill-opacity="${clamp(p*2-1)}"/>
+   ${BRAINF.map((d,i)=>`<path d="${d}" fill="none" stroke-width="${sw*.75}" ${draw(320,(p-.4-i*.05)*2.2)}/>`).join("")}</g>`;}
+const trophy=(c=INK)=>`<path d="M-90,-120 L90,-120 L80,-20 Q70,50 0,60 Q-70,50 -80,-20 Z" fill="${c}"/><path d="M-90,-100 Q-150,-100 -140,-40 Q-130,0 -80,0 M90,-100 Q150,-100 140,-40 Q130,0 80,0" fill="none" stroke="${c}" stroke-width="18"/><rect x="-18" y="56" width="36" height="60" fill="${c}"/><rect x="-80" y="110" width="160" height="40" rx="10" fill="${c}"/><path d="M-50,-90 Q-50,-30 -20,0" stroke="#fff" stroke-width="12" fill="none" stroke-linecap="round" opacity=".5"/>`;
+const stamp=(txt,col,sc,r=-10)=>G(0,0,sc,`<rect x="${-txt.length*34-40}" y="-70" width="${txt.length*68+80}" height="140" rx="22" fill="#fff" stroke="${col}" stroke-width="14"/>${TXT(0,36,txt,104,{c:col,w:900,ls:4})}`,{r});
+const bubble=(txt,w,col=INK)=>`<path d="M${-w/2},-40 Q${-w/2},-60 ${-w/2+20},-60 L${w/2-20},-60 Q${w/2},-60 ${w/2},-40 L${w/2},20 Q${w/2},40 ${w/2-20},40 L-10,40 L-40,70 L-36,40 L${-w/2+20},40 Q${-w/2},40 ${-w/2},20 Z" fill="#fff" stroke="${col}" stroke-width="8" filter="url(#ds)"/>${TXT(0,14,txt,40,{w:800,c:col})}`;
+const checkC=(col,p)=>`<circle r="40" fill="${col}"/><path d="M-18 0 L-5 14 L20 -14" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" ${draw(60,p)}/>`;
+
+/* ---------- Dokie ---------- */
+function talkAmp(t){for(const w of WORDS){if(t>=w[0]-.02&&t<=w[1]) return .35+.45*Math.abs(Math.sin(t*19+w[0]*7));} return 0;}
+function poseFrom(keys,t){let i=0; keys.forEach((k,j)=>{if(t>=k[0]) i=j;});
+  const c=PO[keys[i][1]], pv=i?PO[keys[i-1][1]]:c, p=eio(Pr(t,keys[i][0],keys[i][0]+.28)), m=(a,b)=>lerp(a??0,b??0,p);
+  const ex={}; ["lid","brow","brow2","px"].forEach(k=>ex[k]=m(pv.ex[k],c.ex[k]));
+  return {name:keys[i][1],lean:m(pv.lean,c.lean),tilt:m(pv.tilt,c.tilt),bob:m(pv.bob,c.bob),b:[m(pv.b[0],c.b[0]),m(pv.b[1],c.b[1])],f:[m(pv.f[0],c.f[0]),m(pv.f[1],c.f[1])],
+   fh:p<.5?pv.fh:c.fh,fha:m(pv.fha,c.fha),fhs:m(pv.fhs||1.35,c.fhs||1.35),bh:p<.5?pv.bh:c.bh,bha:m(pv.bha,c.bha),ex};}
+/* x,feetY,scale, keys [[t,pose]], o:{flip,talk,col,seed,jitter,look} */
+function dokie(t,x,fy,s,keys,o={}){
+  const P=poseFrom(keys,t), sd=o.seed||0;
+  P.lb=[-12,6]; P.lf=[18,-12];
+  P.lean+=Math.sin(t*2.1+sd)*1.4; P.tilt+=Math.sin(t*1.6+sd)*2.5;
+  if(P.name==="wag") P.f[1]+=Math.sin(t*20)*12;
+  if(P.name==="explain"||P.name==="present"){P.f[0]+=Math.sin(t*2.7+sd)*6;P.f[1]+=Math.sin(t*3.3+sd)*9;}
+  if(o.jitter){P.f[1]+=Math.sin(t*14+sd)*14;P.b[1]+=Math.cos(t*12)*14;P.tilt+=Math.sin(t*9)*5;P.bob=(P.bob||0)+Math.abs(Math.sin(t*7))*-10;}
+  const amp=o.talk?talkAmp(t):0; P.tilt+=amp*Math.sin(t*8)*4;
+  P.ex.blink=((t+.7+sd)%3.3)<.11?1:0; P.ex.mouth=amp; if(o.look) P.ex.look=o.look;
+  let s0="";
+  if(o.col) s0+=`<ellipse cx="${x}" cy="${fy-330*s}" rx="${330*s}" ry="${430*s}" fill="${o.col}" opacity=".22" filter="url(#bl)"/>`;
+  s0+=`<ellipse cx="${x}" cy="${fy+8}" rx="${230*s}" ry="${30*s}" fill="${o.col||"rgba(0,0,0,.5)"}" opacity=".45" filter="url(#bl)"/>`;
+  return s0+`<g transform="translate(${x} ${fy}) scale(${o.flip?-s:s} ${s}) translate(-540 -1665)" filter="url(#msh)">${manSVG(P)}</g>`;
+}
+
+/* ---------- scenes (orig seconds) ---------- */
+function split(t){ // the loop frame: used at the start and at the end
+  let s=`<rect x="-200" y="-200" width="740" height="2400" fill="${RL}"/><rect x="540" y="-200" width="760" height="2400" fill="${BL}"/>`;
+  s+=dokie(t,285,1790,.6,[[-9,"shrug"]],{col:RED,jitter:1,seed:1});
+  s+=dokie(t,800,1790,.6,[[-9,"explain"]],{col:BLU,flip:1,seed:2});
+  // multitasker orbiting icons
+  [["phone",0],["mail",2.1],["tv",4.2]].forEach(([k,ph],i)=>{const a=t*2.6+ph; s+=G(285+Math.cos(a)*190,930+Math.sin(a)*70,.62,card(IC[k](RED),RED,180)+badge(i+1),{r:Math.sin(t*5+i)*10});});
+  // single-tasker one laptop, steady
+  s+=G(800,930+Math.sin(t*2)*8,.75,card(IC.lap(BLU),BLU,200));
+  s+=G(285,560,1,pillC("MULTITASKER",440,RED,40)); s+=G(800,560,1,pillC("SINGLE-TASKER",470,BLU,40));
+  s+=`<path d="M540,640 L540,1920" stroke="${INK}" stroke-width="8"/>`+G(540,1210,1+.06*Math.sin(t*6),`<circle r="86" fill="${INK}" stroke="#fff" stroke-width="10"/>${TXT(0,26,"VS",76,{c:"#fff",w:900})}`);
+  return s;}
+const SC=[];
+SC.push({a:0,b:2.75,tin:"none",tout:"whip",f:t=>{
+  let s=split(t);
+  // scanning "liar?" spotlight
+  if(t>1.1){const side=Math.floor((t-1.1)/.38)%2, x=side?800:285, q=pop(t,1.1,.25);
+    s+=G(x,770,q,`<circle r="70" fill="${INK}"/>${TXT(0,30,"?",90,{c:"#fff",w:900})}`,{r:Math.sin(t*9)*8});}
+  return s;}});
+SC.push({a:2.7,b:5.9,tin:"whip",tout:"zoom",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="#f7f6f3"/>`;
+  s+=G(540,600,pop(t,2.9),pillC("WINNER",360,INK,46));
+  const sh=t>4.8?Math.sin(t*60)*8*(1-Pr(t,4.8,5.6)):0;
+  s+=G(540+sh,960,1.5*pop(t,2.85,.4),trophy(INK)+`<path d="M-120,-150 Q0,-210 120,-150 L150,170 L-150,170 Z" fill="#fff" stroke="${INK}" stroke-width="10"/>`+TXT(0,60,"?",210,{serif:1,c:RED}),{r:Math.sin(t*3)*3});
+  [[300,820],[790,860],[360,1150],[740,1170]].forEach(([x,y],i)=>{s+=G(x,y,pop(t,3.8+i*.1)*(.8+.2*Math.sin(t*6+i)),`<path d="M0,-30 C3,-8 8,-3 30,0 C8,3 3,8 0,30 C-3,8 -8,3 -30,0 C-8,-3 -3,-8 0,-30 Z" fill="${INK}"/>`);});
+  if(t>4.75) s+=G(540,1290,pop(t,4.8,.25),stamp("BRUTAL",RED,.8,-6));
+  s+=dokie(t,180,1830,.45,[[2.7,"point"],[4.5,"wag"]],{talk:1,seed:3});
+  return s;}});
+SC.push({a:5.85,b:11.1,tin:"zoom",tout:"whip",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="${RL}"/>`;
+  s+=G(540,560,pop(t,6.05),pillC("MULTITASKER",440,RED,40));
+  const chaos=t>10?1.6:1;
+  s+=dokie(t,540,1800,.68,[[5.8,"shrug"],[7.0,"explain"],[8.0,"point"],[8.7,"pointUp"],[10.0,"shrug"]],{col:RED,jitter:1,seed:4,look:Math.sin(t*6)*8});
+  const items=[["phone",7.04,250,820],["mail",7.96,830,800],["tv",8.72,540,700],["music",10.0,180,1130],["chat",10.1,900,1120]];
+  items.forEach(([k,t0,x,y],i)=>{if(t<t0) return; const w=Math.sin(t*7*chaos+i*2)*14*chaos;
+    s+=G(x+w,y+Math.cos(t*6*chaos+i)*10*chaos,.95*pop(t,t0),card(IC[k](RED),RED,190)+(i<3?badge((i+1)*3):""),{r:w*.6});});
+  if(t>10) s+=G(540,1180,pop(t,10.0,.25),stamp("AT ONCE",RED,.9,-8));
+  return s;}});
+SC.push({a:11.05,b:15.05,tin:"whip",tout:"up",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="${BL}"/>`;
+  s+=G(540,560,pop(t,11.4),pillC("SINGLE-TASKER",470,BLU,40));
+  s+=dokie(t,330,1800,.66,[[11,"explain"],[12.9,"present"],[14.0,"thumb"]],{col:BLU,seed:5});
+  s+=G(770,1180+Math.sin(t*1.5)*6,1.05*pop(t,11.6),card(IC.lap(BLU),BLU,230));
+  [["ONE THING",13.2],["THE NEXT",14.3]].forEach(([l,t0],i)=>{ if(t<t0-.1) return; const y=760+i*130;
+    s+=G(700,y,pop(t,t0-.1,.3),`<rect x="-230" y="-52" width="460" height="104" rx="28" fill="#fff" stroke="${BLU}" stroke-width="8" filter="url(#ds)"/>${G(-165,0,.9,checkC(BLU,Pr(t,t0,t0+.25)))}${TXT(40,15,l,42,{w:800,c:BLU})}`);});
+  return s;}});
+SC.push({a:15.0,b:18.25,tin:"up",tout:"zoom",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="#f7f6f3"/>`;
+  s+=G(540,880,1.35*pop(t,15.1,.4),brain(Pr(t,15.1,15.9)));
+  const k=eio(Pr(t,16.56,17.1));
+  if(t>16.5) s+=G(lerp(-150,170,k),1260,.9,card(IC.phone(RED),RED,190),{r:-8});
+  if(t>16.75) s+=G(lerp(1230,910,eio(Pr(t,16.8,17.3))),1260,.9,card(IC.lap(BLU),BLU,190),{r:8});
+  if(t>16.9) s+=`<path d="M290,1180 Q360,1080 420,1010" stroke="${RED}" stroke-width="12" fill="none" stroke-linecap="round" ${draw(260,Pr(t,16.9,17.3))}/><path d="M790,1180 Q720,1080 660,1010" stroke="${BLU}" stroke-width="12" fill="none" stroke-linecap="round" ${draw(260,Pr(t,17.1,17.5))}/>`;
+  if(t>17.6){const p=Pr(t,17.6,17.8); s+=`<g stroke="${RED}" stroke-width="34" stroke-linecap="round"><path d="M360,700 L${360+360*eo(p)},${700+360*eo(p)}"/><path d="M720,700 L${720-360*eo(Pr(t,17.7,17.9))},${700+360*eo(Pr(t,17.7,17.9))}" opacity="${t>17.7?1:0}"/></g>`;}
+  s+=dokie(t,540,1880,.42,[[15,"think"],[16.5,"explain"],[17.6,"stop"]],{talk:1,seed:6});
+  return s;}});
+SC.push({a:18.2,b:21.65,tin:"zoom",tout:"drop",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="#f7f6f3"/>`;
+  // flip-flop switching
+  const flips=[18.64,18.9,19.15,19.4,19.76,20.16,20.72,21.2];
+  let n=0; flips.forEach(f=>{if(t>=f) n++;});
+  const side=n%2, lastF=flips[Math.max(0,n-1)], q=eob(Pr(t,lastF,lastF+.18));
+  const px=side?lerp(-1,1,q):lerp(1,-1,q);
+  s+=G(540,560,pop(t,18.3),pillC("SWITCH",320,INK,44));
+  s+=G(540,820,1,`<rect x="-230" y="-90" width="460" height="180" rx="90" fill="${side?BLU:RED}" filter="url(#ds)"/><circle cx="${px*140}" r="74" fill="#fff"/>`);
+  s+=G(200,820,side?.7:1,card(IC.phone(RED),RED,170),{op:side?.4:1}); s+=G(880,820,side?1:.7,card(IC.lap(BLU),BLU,170),{op:side?1:.4});
+  // battery draining with each switch
+  const lvl=1-n/flips.length*.85;
+  s+=G(540,1170,pop(t,19.6),`<rect x="-200" y="-80" width="400" height="160" rx="26" fill="#fff" stroke="${INK}" stroke-width="12"/><rect x="200" y="-34" width="28" height="68" rx="8" fill="${INK}"/><rect x="-184" y="-64" width="${368*lvl}" height="128" rx="16" fill="${lvl<.5?RED:INK}"/>`);
+  flips.forEach((f,i)=>{if(t>f&&t<f+.6&&f>19.7) s+=G(700+i*10,1060-(t-f)*160,1,TXT(0,0,"−1",56,{c:RED,w:900}),{op:1-(t-f)/.6});});
+  s+=dokie(t,180,1870,.4,[[18.2,"shrug"],[20.1,"facepalm"]],{talk:1,seed:7});
+  return s;}});
+SC.push({a:21.6,b:24.85,tin:"drop",tout:"whip",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="#f7f6f3"/>`;
+  const p=eo(Pr(t,21.9,23.0)), R=240, a=p*.4*Math.PI*2;
+  const ex=540+Math.sin(a)*R, ey=880-Math.cos(a)*R;
+  s+=G(0,0,1,`<circle cx="540" cy="880" r="${R}" fill="none" stroke="#e3e2de" stroke-width="80"/>`+(p>0?`<path d="M540,${880-R} A${R} ${R} 0 0 1 ${ex.toFixed(1)},${ey.toFixed(1)}" fill="none" stroke="${RED}" stroke-width="80"/>`:""));
+  s+=G(540,880,pop(t,21.8),TXT(0,50,Math.round(40*p)+"%",170,{w:900,c:RED}));
+  s+=G(540,1250,pop(t,23.4),pillC("TIME LOST",380,INK,44));
+  s+=dokie(t,880,1860,.44,[[21.6,"pointUp"],[22.5,"sad"]],{talk:1,flip:1,seed:8});
+  return s;}});
+SC.push({a:24.6,b:29.45,tin:"whip",tout:"zoom",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="${RL}"/>`;
+  s+=G(540,560,pop(t,24.8),pillC("STANFORD STUDY",520,INK,40));
+  s+=dokie(t,540,1820,.62,[[24.6,"think"],[27.8,"shrug"]],{col:RED,jitter:t>27.7,seed:9,look:t>27.8?Math.sin(t*9)*10:0});
+  const B=[["ping!",160,800,27.8],["new msg",880,760,28.0],["SALE 50%",220,1000,28.2],["lol",890,1010,28.35],["??",540,700,28.5],["5 likes",170,1220,28.65],["call",900,1250,28.8]];
+  B.forEach(([l,x,y,t0],i)=>{if(t<t0) return; s+=G(x,y+Math.sin(t*5+i)*8,pop(t,t0,.25),bubble(l,l.length*24+80,RED),{r:(hash(i)-.5)*14});});
+  if(t>25.0&&t<27.9){ // focus test: find the red ones, ignore the blue
+    let g=`<rect x="-300" y="-190" width="600" height="380" rx="30" fill="#fff" stroke="${INK}" stroke-width="9" filter="url(#ds)"/>`+TXT(0,-130,"FIND THE RED ONES",34,{w:800,c:GR,ls:2});
+    [[-120,-20,20],[90,40,-30]].forEach(([x,y,r])=>{g+=`<rect x="${x-24}" y="${y-48}" width="48" height="96" rx="6" fill="${RED}" transform="rotate(${r} ${x} ${y})"/>`;});
+    const nb=Math.floor(clamp((t-26.08)/.12,0,14));
+    for(let i=0;i<nb;i++){const x=(hash(i+1)-.5)*500, y=(hash(i+7)-.5)*240+20, r=(hash(i+3)-.5)*160;
+      g+=`<rect x="${x-20}" y="${y-40}" width="40" height="80" rx="6" fill="${BLU}" opacity="${.55+.45*Math.sin(t*14+i)}" transform="rotate(${r+Math.sin(t*6+i)*15} ${x} ${y})"/>`;}
+    s+=G(540,900,pop(t,25.05)*(1+.03*Math.sin(t*9)),g,{op:1-Pr(t,27.6,27.9)});}
+  return s;}});
+SC.push({a:29.4,b:33.75,tin:"zoom",tout:"zoom",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="#f7f6f3"/>`;
+  s+=G(540,560,pop(t,29.6),pillC("UNIVERSITY OF UTAH",620,INK,38));
+  const H=[400,330,250,170,80];
+  H.forEach((h,i)=>{const t0=30.5+i*.28, k=eo(Pr(t,t0,t0+.35)), x=230+i*155, worst=i===4&&t>32.64;
+    s+=`<rect x="${x-55}" y="${1230-h*k}" width="110" height="${h*k}" rx="14" fill="${worst?RED:INK}" opacity="${i===4||t<32.6?1:.35}"/>`;});
+  s+=`<path d="M150,1240 L960,1240" stroke="${INK}" stroke-width="10" stroke-linecap="round"/>`;
+  s+=TXT(555,1310,"multitasks more →",44,{w:800,c:GR})+TXT(130,760,"skill",44,{w:800,c:GR,a:"start"});
+  if(t>32.64) s+=G(700,880,pop(t,32.64,.25),stamp("WORST",RED,.85,-8));
+  s+=dokie(t,930,1880,.38,[[29.4,"present"],[32.2,"point"]],{talk:1,flip:1,seed:10});
+  return s;}});
+SC.push({a:33.7,b:35.55,tin:"zoom",tout:"none",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="${RL}"/>`;
+  s+=dokie(t,620,1820,.68,[[33.7,"thumb"]],{col:RED,seed:11});
+  s+=G(400,800,pop(t,33.9),`<ellipse rx="300" ry="140" fill="#fff" stroke="${INK}" stroke-width="9" filter="url(#ds)"/><circle cx="160" cy="170" r="26" fill="#fff" stroke="${INK}" stroke-width="7"/><circle cx="200" cy="225" r="14" fill="#fff" stroke="${INK}" stroke-width="6"/>${TXT(0,-6,"I'm GREAT",68,{w:900})}${TXT(0,62,"at this.",50,{serif:1})}`);
+  return s;}});
+SC.push({a:35.5,b:37.9,tin:"none",tout:"whip",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="${BL}"/>`;
+  s+=G(540,560,pop(t,35.6,.3),pillC("WINNER",360,BLU,48));
+  for(let i=0;i<26;i++){const x=hash(i)*1080, y=((t-35.5)*(300+hash(i+9)*300)+hash(i+3)*600)%1500+500, r=t*200*(hash(i+5)-.5);
+    s+=`<rect x="${x}" y="${y}" width="22" height="34" fill="${i%2?BLU:INK}" transform="rotate(${r} ${x} ${y})" opacity="${Pr(t,35.6,35.8)}"/>`;}
+  s+=`<rect x="330" y="1610" width="420" height="230" rx="16" fill="${BLU}"/>`+TXT(540,1770,"1",150,{c:"#fff",w:900});
+  s+=dokie(t,540,1620,.6,[[35.5,"pointUp"],[36.5,"thumb"]],{col:BLU,seed:12});
+  s+=G(820,880,pop(t,35.8,.4)*.9,trophy(BLU),{r:Math.sin(t*4)*6});
+  return s;}});
+SC.push({a:37.65,b:40.55,tin:"whip",tout:"iris",f:t=>{
+  let s=`<rect x="-200" y="-200" width="1480" height="2400" fill="#f7f6f3"/>`;
+  const sc=lerp(1.25,1,eo(Pr(t,37.85,38.4)));
+  s+=G(540,1040,sc,`<rect x="-250" y="-430" width="500" height="860" rx="70" fill="${INK}" filter="url(#ds)"/><rect x="-220" y="-390" width="440" height="760" rx="40" fill="#fff"/>`
+   +[["u up?",38.3,-1],["watching a",38.7,1],["dokie video lol",38.95,1],["typing...",39.3,-1]].map(([l,t0,sd],i)=>t<t0?"":G(sd*60,-260+i*140,pop(t,t0,.25),`<rect x="-150" y="-46" width="300" height="92" rx="40" fill="${sd>0?RED:"#e9e8e4"}"/>${TXT(0,14,l,l.length>12?32:38,{c:sd>0?"#fff":INK,w:700})}`)).join(""));
+  if(t>39.9) s+=G(540,1040,pop(t,39.95,.25),stamp("CAUGHT",RED,.85,-8));
+  s+=dokie(t,190,1880,.42,[[37.85,"point"],[39.9,"wag"]],{talk:1,seed:13});
+  return s;}});
+/* loop back: ends on the exact opening composition */
+SC.push({a:40.45,b:99,tin:"iris",tout:"none",f:t=>split(t-41.35)});
+
+const BEATS=[0,1.2,2.88,3.8,4.8,6.08,7.04,7.96,8.72,10.0,11.52,13.2,14.3,15.68,16.56,17.6,18.64,19.76,20.72,22.16,23.76,24.8,26.08,27.8,29.6,30.88,32.64,34.76,35.6,36.56,38.4,39.95,40.45];
+const SHAKE=[[0,.35,16],[4.8,.35,12],[10.0,.35,14],[17.6,.3,10],[22.2,.3,10],[32.64,.35,14],[35.6,.3,8],[39.95,.3,12]];
+const FLASH=[[35.55,.25],[40.45,.18]];
+
+function wrap(sc,t,inner,i){
+  const din=.32,dout=.3; let clip="";
+  const pi=sc.tin==="none"?1:eio(Pr(t,sc.a,sc.a+din)), po=sc.tout==="none"?0:eio(Pr(t,sc.b-dout,sc.b));
+  const tf=(ty,p,dir)=>{const q=1-p;
+    if(ty==="zoom") return [`translate(540 900) scale(${dir>0?lerp(1,0.55,q):lerp(1,1.8,q)}) translate(-540 -900)`,p];
+    if(ty==="whip") return [`translate(${dir>0?1100*q:-1100*q} 0)`,1];
+    if(ty==="up") return [`translate(0 ${dir>0?1000*q:-1000*q})`,1];
+    if(ty==="drop") return [`translate(0 ${dir>0?-1000*q:1300*q*q}) rotate(${dir>0?0:q*10} 540 900)`,1];
+    if(ty==="iris") return ["",1,true];
+    return ["",1];};
+  let [a1,o1,ir1]=tf(sc.tin,pi,1),[a2,o2,ir2]=tf(sc.tout,1-po,-1);
+  if(ir1&&pi<1) clip=`<clipPath id="ir${i}"><circle cx="540" cy="900" r="${pi*1400}"/></clipPath>`;
+  if(ir2&&po>0) clip=`<clipPath id="ir${i}"><circle cx="540" cy="900" r="${(1-po)*1400}"/></clipPath>`;
+  const pz=lerp(1,1.08,Pr(t,sc.a,Math.min(sc.b,sc.a+5)));
+  return `${clip}<g ${clip?`clip-path="url(#ir${i})"`:""} transform="${a2} ${a1}" opacity="${(o1*o2).toFixed(3)}"><g transform="translate(540 900) scale(${pz.toFixed(4)}) translate(-540 -900)">${inner}</g></g>`;
+}
+const capEl=document.getElementById("cap"); let lastCap=-1;
+function renderCap(t){
+  let i=-1; SEG.forEach((s,k)=>{if(t>=s[0]-.08) i=k;});
+  if(i<0){capEl.innerHTML="";lastCap=-1;return;}
+  const s=SEG[i], nxt=SEG[i+1]?SEG[i+1][0]:99, end=Math.min(nxt-.08,s[1]+.5);
+  if(t>end&&i<SEG.length-1){capEl.style.opacity=0;return;} capEl.style.opacity=1;
+  if(lastCap!==i){capEl.innerHTML=s[2].split(" ").map(w=>{const c=w.includes("~")?"ac":w.includes("^")?"bl":w.includes("*")?"em":"";return `<span class="${c}">${w.replace(/[*~^]/g,"")}</span>`}).join(" ");lastCap=i;capEl.style.fontSize=s[2].length>44?"66px":"78px";}
+  const sp=capEl.children;
+  for(let k=0;k<sp.length;k++){const t0=i===0?-1:s[3][k]-.06, p=Pr(t,t0,t0+.18);
+    sp[k].style.opacity=p>0?1:0; sp[k].style.transform=`translateY(${(1-eob(p))*26}px) scale(${.72+.28*eob(p)})`;}
+}
+function render(tv){
+  const t=tv*SPEED; let out="";
+  SC.forEach((sc,i)=>{if(t>=sc.a&&t<sc.b) out+=wrap(sc,t,sc.f(t),i);});
+  document.getElementById("gl").innerHTML=out; renderCap(t);
+  let sx=0,sy=0; SHAKE.forEach(([a,d,m])=>{const k=Pr(t,a,a+d); if(k>0&&k<1){sx+=Math.sin(t*95)*m*(1-k);sy+=Math.cos(t*80)*m*(1-k);}});
+  const zoom=1+.012*Math.sin(t*.5)+.025*BEATS.reduce((a,b)=>{const k=Pr(t,b,b+.3);return a+(k>0&&k<1?Math.sin(k*Math.PI):0)},0)+(t<.35?.08*(1-eo(t/.35)):0);
+  document.getElementById("cam").style.transform=`translate(${sx}px,${sy}px) scale(${zoom})`;
+  const fl=FLASH.reduce((a,[b,d])=>{const k=Pr(t,b,b+d);return Math.max(a,k>0&&k<1?(1-k)*.8:0)},0);
+  document.getElementById("flash").style.opacity=fl;
+}
+window.render=render;
+render(+(new URLSearchParams(location.search).get("t")||0));
+</script></body></html>
