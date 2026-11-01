@@ -1,0 +1,2 @@
+# usage: bash mux_voice.sh vo.mp3  -> coffee_vs_nap.mp4
+ffmpeg -y -framerate 30 -i fr/%04d.jpg -i "$1" -i sfx.wav -i wm.png -filter_complex "[0][3]overlay,format=yuv420p[v];[2]volume=0.6[s];[1][s]amix=inputs=2:duration=longest:normalize=0,alimiter=limit=0.95[a]" -map "[v]" -map "[a]" -c:v libx264 -crf 20 -preset slow -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart -t 38.9 coffee_vs_nap.mp4
