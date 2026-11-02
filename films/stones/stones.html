@@ -250,7 +250,7 @@ function render(t){
   document.getElementById("w").innerHTML=`<g transform="translate(${540+Math.sin(t*93)*sh} ${960+Math.cos(t*71)*sh}) scale(${z}) translate(${-cx} ${-cy})">${world(ts,t)}</g>`;
   // overlay
   let ov="";
-  ov+=`<image href="wm_light.png" x="0" y="0" width="1080" height="1920" opacity=".9"/>`;
+  ov+=`<image href="wm_mind.png" x="0" y="0" width="1080" height="1920" opacity=".9"/>`;
   if(t<2.0) ov+=caption("They threw stones at him.",1700,Pr(t,0,1.0),70);
   if(t>=2.0&&t<2.7){ const k=Pr(t,2.0,2.7);
     for(let i=0;i<14;i++){const y=(hash(i+Math.floor(t*30))*1920); ov+=`<rect x="0" y="${y}" width="1080" height="${4+hash(i)*18}" fill="#fff" opacity="${.08+hash(i+2)*.15}"/>`;}
