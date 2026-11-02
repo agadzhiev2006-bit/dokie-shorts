@@ -1,0 +1,267 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>*{margin:0;padding:0}html,body{width:1080px;height:1920px;overflow:hidden;background:#0b0f19;font-family:"Inter Display",Inter,sans-serif}
+#cam{position:absolute;inset:0;transform-origin:540px 960px}svg{position:absolute;left:0;top:0}
+#grain{position:absolute;inset:0;opacity:.07;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(110% 75% at 50% 50%,transparent 50%,rgba(0,0,0,.6) 100%)}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+</style></head><body>
+<div id="cam"><svg id="sv" width="1080" height="1920"><defs>
+ <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070a12"/><stop offset=".6" stop-color="#121a2b"/><stop offset="1" stop-color="#18213a"/></linearGradient>
+ <radialGradient id="gMoon" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#f4f6fa"/><stop offset=".7" stop-color="#d6dbe4"/><stop offset="1" stop-color="#b9c0cc"/></radialGradient>
+ <radialGradient id="gGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#dfe6f5" stop-opacity=".55"/><stop offset=".4" stop-color="#9fb0d0" stop-opacity=".18"/><stop offset="1" stop-color="#9fb0d0" stop-opacity="0"/></radialGradient>
+ <radialGradient id="gHero" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+ <radialGradient id="gRed" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#e5352b" stop-opacity=".55"/><stop offset="1" stop-color="#e5352b" stop-opacity="0"/></radialGradient>
+ <linearGradient id="gStone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa0aa"/><stop offset="1" stop-color="#6c727d"/></linearGradient>
+ <filter id="bl"><feGaussianBlur stdDeviation="3"/></filter>
+</defs><g id="w"></g></svg></div>
+<div id="vig"></div><div id="grain"></div><div id="flash"></div>
+<svg id="ov" width="1080" height="1920"></svg>
+<script src="../engine/man.js"></script>
+<script>
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)), Pr=(t,a,b)=>clamp((t-a)/(b-a)), lerp=(a,b,p)=>a+(b-a)*p;
+const eio=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}, eo=x=>1-Math.pow(1-clamp(x),3), ei=x=>clamp(x)**2;
+const eob=x=>{x=clamp(x);const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const hash=n=>{const s=Math.sin(n*127.1)*43758.5453;return s-Math.floor(s)};
+const ang=(p,q)=>Math.atan2(q[0]-p[0],q[1]-p[1])/D;
+function ik(S,Tg,l1,l2,bend){const dx=Tg[0]-S[0],dy=Tg[1]-S[1];let d=Math.hypot(dx,dy);d=Math.min(d,l1+l2-1);
+ const th=Math.atan2(dx,dy)/D, a=Math.acos(clamp((l1*l1+d*d-l2*l2)/(2*l1*d),-1,1))/D, up=th+bend*a, E=add(S,v(up,l1)); return [up,ang(E,Tg)];}
+const T_=(x,y,s,sz,o={})=>`<text x="${x}" y="${y}" text-anchor="${o.a||"middle"}" font-family="${o.f||"Inter Display,Inter,sans-serif"}" font-weight="${o.w||800}" font-size="${sz}" fill="${o.c||"#fff"}" letter-spacing="${o.ls||0}" opacity="${o.op??1}" ${o.it?'font-style="italic"':""}>${s}</text>`;
+
+/* ---------- data ---------- */
+const GROUND=1500, SH=66, TX=800, DSC=.34;
+const WORDS=["LOSER","WEIRDO","NO TALENT","QUIT","BROKE","LOL","WHO ARE YOU?","TOO LATE","DREAMER","WASTE OF TIME","STAY IN YOUR LANE"];
+const TIMES=[4.0,6.8,7.7,8.5,9.2,9.8,10.35,10.85,11.3,11.75,12.2];
+const BIG={w:"YOU'LL NEVER|MAKE IT", t:13.6, h:124};
+const THROWER=[7,5,6,4];
+const sw=w=>Math.max(150,62+w.length*21);
+/* slot of stone i (bottom up) */
+const slotY=i=>GROUND-SH*i-SH/2;
+const jit=i=>(hash(i+11)-.5)*24, rot=i=>(hash(i+5)-.5)*5;
+/* when stone i is in place */
+const placeT=i=>i===0?6.35:TIMES[i]+.78;
+const BIGPLACE=15.15;
+
+/* Dokie feet y over time */
+function feetY(ts){
+  let y=GROUND;
+  for(let i=0;i<WORDS.length;i++){const a=placeT(i)-.28,b=placeT(i)+.12; const k=Pr(ts,a,b); if(k>0){y-=SH*eo(k); }
+    if(k>0&&k<1) y-=Math.sin(k*Math.PI)*70;}
+  {const a=BIGPLACE-.35,b=BIGPLACE+.15,k=Pr(ts,a,b); if(k>0) y-=BIG.h*eo(k); if(k>0&&k<1) y-=Math.sin(k*Math.PI)*90;}
+  return y;}
+
+/* ---------- drawing ---------- */
+function stone(x,y,w,txt,r=0,s=1,o={}){
+  const h=o.h||SH, lines=txt.split("|");
+  const txtc=o.red?"#e5352b":"#1b1e25";
+  let t=lines.map((l,i)=>T_(0,(i-(lines.length-1)/2)*40+12,l,o.fs||32,{c:txtc,f:"Inter,sans-serif",w:900,ls:2})).join("");
+  return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${r.toFixed(2)}) scale(${s})">
+   <rect x="${-w/2+4}" y="${-h/2+8}" width="${w}" height="${h}" rx="${h*.38}" fill="#05070c" opacity=".45"/>
+   <rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${h*.38}" fill="url(#gStone)" stroke="#262a33" stroke-width="5"/>
+   <path d="M${-w/2+16} ${-h/2+12} Q0 ${-h/2+4} ${w/2-16} ${-h/2+12}" stroke="#c4c9d1" stroke-width="4" fill="none" opacity=".7" stroke-linecap="round"/>
+   <path d="M${w*.18} ${-h/2} l-8 14 l10 10" stroke="#3a3f49" stroke-width="3" fill="none"/>
+   ${o.red?`<rect x="${-w/2-30}" y="${-h/2-30}" width="${w+60}" height="${h+60}" fill="url(#gRed)" opacity="${o.glow??1}"/>`:""}
+   ${t}</g>`;}
+
+const CC="#3c4252", CO="#141820";
+function limb(pts,w,col=CC){const d="M"+pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" L");
+  return `<path d="${d}" stroke="${CO}" stroke-width="${w+9}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;}
+function face(type,t,seed){
+  const E="#e8ebf0"; let s="";
+  if(type==="laugh"){ s+=`<path d="M6 -16 q9 -12 18 0 M32 -16 q9 -12 18 0" stroke="${E}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M12 6 Q30 ${30+Math.sin(t*22+seed)*4} 48 6 Z" fill="${E}"/>`;}
+  if(type==="smirk"){ s+=`<path d="M6 -14 h16 M32 -14 h16" stroke="${E}" stroke-width="5" stroke-linecap="round"/><circle cx="16" cy="-9" r="3.5" fill="${E}"/><circle cx="42" cy="-9" r="3.5" fill="${E}"/><path d="M16 12 Q32 22 48 8" stroke="${E}" stroke-width="5" fill="none" stroke-linecap="round"/>`;}
+  if(type==="angry"){ s+=`<path d="M4 -26 L24 -16 M52 -26 L32 -16" stroke="${E}" stroke-width="5" stroke-linecap="round"/><circle cx="16" cy="-8" r="4" fill="${E}"/><circle cx="40" cy="-8" r="4" fill="${E}"/><path d="M16 18 Q30 8 46 18" stroke="${E}" stroke-width="5" fill="none" stroke-linecap="round"/>`;}
+  if(type==="shock"){ s+=`<circle cx="16" cy="-12" r="8" fill="none" stroke="${E}" stroke-width="4"/><circle cx="42" cy="-12" r="8" fill="none" stroke="${E}" stroke-width="4"/><circle cx="17" cy="-12" r="3" fill="${E}"/><circle cx="43" cy="-12" r="3" fill="${E}"/><ellipse cx="30" cy="18" rx="8" ry="${11+Math.sin(t*3+seed)*2}" fill="${E}"/>`;}
+  if(type==="strain"){ s+=`<path d="M6 -14 l14 6 l-14 6 M50 -14 l-14 6 l14 6" stroke="${E}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 16 h36" stroke="${E}" stroke-width="6" stroke-linecap="round"/>`;}
+  return s;}
+/* crowd stickman, faces right. feet at (x,y) */
+function cman(x,y,sc,o,t,seed){
+  const hip=[o.lean||0, -175+(o.bob||0)], neck=add(hip,v(180+(o.lean||0)*.15,150)), sh=add(neck,[0,14]);
+  const hc=add(neck,[(o.lean||0)*.3,-52]);
+  const arm=a=>{const e=add(sh,v(a[0],105));return [sh,e,add(e,v(a[1],95))]};
+  const A=arm(o.b||[-15,-5]), B=arm(o.f||[15,5]);
+  const lg=(a,k)=>{const kn=add(hip,v(a,92));return [hip,kn,add(kn,v(a+k,92))]};
+  const col=o.col||CC;
+  let s=limb(A,28,col)+limb(lg(-12+(o.step||0),6),30,col)+limb(lg(14-(o.step||0),-6),30,col)+limb([hip,neck],32,col);
+  s+=`<circle cx="${hc[0]}" cy="${hc[1]}" r="54" fill="${col}" stroke="${CO}" stroke-width="5"/><g transform="translate(${hc[0]-12} ${hc[1]}) rotate(${o.tilt||0})">${face(o.face||"laugh",t,seed)}</g>`;
+  s+=limb(B,28,col);
+  const hand=B[2];
+  if(o.hold) s+=stone(hand[0],hand[1]-10,90,"",-10,.9,{h:44});
+  return {s:`<g transform="translate(${x} ${y}) scale(${sc})">${s}</g>`, hand:[x+hand[0]*sc,y+hand[1]*sc]};}
+
+/* Dokie (mirrored to face left), feet at (x,y) */
+const DBASE=o=>Object.assign({lean:0,tilt:0,b:[-8,-6],f:[12,4],lb:[-10,4],lf:[14,-6],ex:{}},o);
+const S_of=P=>[540+Math.sin(P.lean*D)*215, 1150-Math.cos(P.lean*D)*215+26];
+function handW(P,x,y,arm){const S=S_of(P); const a=P[arm]; const e=add(S,v(a[0],140)), h=add(e,v(a[1],130)); return [x-(h[0]-540)*DSC, y+(h[1]-1665)*DSC];}
+const dok=(x,y,P)=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${-DSC} ${DSC}) translate(-540 -1665)">${manSVG(P)}</g>`;
+
+/* ---------- state ---------- */
+function crowdFace(ts,i){
+  if(ts>=15.2) return "shock";
+  if(ts>=12.6&&ts<14.6&&i>=5) return "strain";
+  if(ts>=10) return "angry";
+  if(ts>=6.6) return (i%3===0)?"smirk":"laugh";
+  return "laugh";}
+function crowdState(ts){
+  const out=[]; const N=8;
+  for(let i=0;i<N;i++){
+    const back=i<3; const x=back?[215,295,375][i]:[170,240,310,380,450][i-3], y=back?GROUND-26:GROUND, sc=back?.82:1;
+    const seed=i*1.7; const fc=crowdFace(ts,i);
+    let o={face:fc,col:back?"#2c3140":CC,bob:fc==="laugh"?Math.abs(Math.sin(ts*9+seed))*-10:0,lean:fc==="laugh"?Math.sin(ts*9+seed)*4:0};
+    // idle arms
+    if(ts<6.6){ o.f=i%2?[100+Math.sin(ts*9+seed)*8,95]:[30,20]; o.b=[-20,-10]; o.tilt=Math.sin(ts*9+seed)*6; }
+    else if(ts<15.2){ o.f=[150,170]; o.hold=1; o.b=[-25,-15]; }
+    else { o.f=[30,10]; o.b=[-30,-10]; o.lean=-6; o.tilt=-14; }
+    // throws
+    TIMES.forEach((tt,k)=>{ if(k===0) return; if(THROWER[k%4]+0!==i) return;
+      const wu=Pr(ts,tt-.45,tt), fol=Pr(ts,tt,tt+.35);
+      if(wu>0&&fol<1){ o.f= fol>0?[lerp(-160,110,eo(fol)),lerp(-150,100,eo(fol))]:[lerp(150,-160,eio(wu)),lerp(170,-150,eio(wu))]; o.lean=fol>0?10:-8; o.step=fol>0?14:0; o.hold=fol<=0;} });
+    if(ts>=4-.45&&ts<4.4&&i===7){const wu=Pr(ts,3.55,4),fol=Pr(ts,4,4.35); o.f=fol>0?[lerp(-160,110,eo(fol)),100]:[lerp(30,-160,eio(wu)),-150]; o.hold=fol<=0; o.face="smirk";}
+    // big stone carry
+    if(i>=5 && ts>=12.6 && ts<14.0){ o.f=[172,178]; o.b=[168,176]; o.hold=0; o.bob=Math.sin(ts*14+i)*4; }
+    out.push({x,y,sc,o,seed,back});
+  }
+  return out;}
+
+function dokPose(ts){
+  let P=DBASE({fh:"fist",bh:"fist"}); P.ex={blink:((ts+.3)%3.3)<.12?1:0};
+  if(ts<4.6){ P.tilt=-2; }
+  // first stone: look down, bend, pick
+  if(ts>=4.6&&ts<6.1){ const k=Pr(ts,4.6,5.1), b=Pr(ts,5.4,5.9); P.tilt=lerp(0,18,eo(k)); P.ex={px:6,brow:-4,blink:0};
+    P.lean=lerp(0,34,eio(b)); if(b>0){const S=S_of(P); P.f=ik(S,[S[0]+190,1640],140,130,1); P.fh="open";} }
+  // per-stone catch & hop
+  const catchAt=i=>i===0?6.05:TIMES[i]+.55;
+  for(let i=0;i<WORDS.length;i++){
+    const c=catchAt(i), p=placeT(i);
+    if(ts>=c-.2&&ts<p+.15){ const up=Pr(ts,c-.2,c), j=Pr(ts,p-.28,p+.12);
+      if(i>0){P.f=[lerp(12,108,eo(up)),lerp(4,148,eo(up))]; P.b=[lerp(-8,-108,eo(up)),lerp(-6,-148,eo(up))]; P.fh=P.bh="open";}
+      if(j>0&&j<1){P.f=[lerp(108,40,eo(j)),lerp(148,10,eo(j))]; P.b=[lerp(-108,-30,eo(j)),lerp(-148,-20,eo(j))]; P.lf=[60,-115]; P.lb=[40,-100]; P.lean=-4;}
+      P.ex={mouth:.2,blink:0,brow:-2}; }
+  }
+  if(ts>=12.2&&ts<14.2){ P.ex={brow:-8,brow2:-8,px:-4,blink:0}; }
+  // big
+  if(ts>=14.1&&ts<BIGPLACE+.2){ const k=Pr(ts,14.1,14.45), sq=Pr(ts,14.45,14.75);
+    P.f=[112,152]; P.b=[-112,-152]; P.fh=P.bh="open"; P.lean=-6;
+    P.ex={brow:-10,brow2:-10,mouth:.6,blink:0}; if(sq>0&&sq<1){const q=Math.sin(sq*Math.PI); P.lf=[40*q,-80*q]; P.lb=[-40*q,80*q]; P.bob=460-460*Math.cos(40*q*D);}
+    const j=Pr(ts,BIGPLACE-.35,BIGPLACE+.15); if(j>0&&j<1){P.lf=[60,-115];P.lb=[40,-100];P.f=[40,10];P.b=[-30,-20];}
+  }
+  if(ts>=BIGPLACE+.2){ const k=Pr(ts,BIGPLACE+.2,BIGPLACE+.9);
+    P.tilt=lerp(0,-8,eo(k)); P.lean=lerp(0,-3,eo(k)); P.ex={lid:6,brow:4,brow2:-4,blink:((ts+.3)%3.3)<.12?1:0};
+    if(ts>=20.0){ const g=Pr(ts,20.0,20.5)*(1-Pr(ts,21.1,21.5)); const S=S_of(P); const tg=[lerp(S[0]+40,600,eio(g)),lerp(S[1]+200,800,eio(g))]; P.f=ik(S,tg,140,130,-1); P.fh=g>.3?"point":"fist"; P.fha=g>.3?-30:0; }
+  }
+  return P;}
+
+/* stone positions in flight */
+function flying(ts,crowd,mode){
+  let s=""; const put=(back,str)=>{ if((mode==='back')===back) s+=str; };
+  WORDS.forEach((w,i)=>{ const tt=TIMES[i], c=i===0?4.6:tt+.55, p=placeT(i);
+    if(ts<tt||ts>=p) return;
+    const th=crowd[THROWER[i%4]]; const from=[th.x+70,th.y-300];
+    const P=dokPose(ts), dy=feetY(ts);
+    let x,y,r;
+    if(i===0){ // lands on ground then picked
+      if(ts<4.6){const k=Pr(ts,4,4.6); x=lerp(from[0],690,k); y=lerp(from[1],GROUND-SH/2,k)-Math.sin(k*Math.PI)*260; r=k*400;}
+      else if(ts<5.9){const b=Pr(ts,4.6,4.9); x=690+b*14; y=GROUND-SH/2-Math.sin(b*Math.PI)*30; r=400+b*320; r=0+(1-b)*8;}
+      else {const k=Pr(ts,5.9,6.25); x=lerp(704,TX+jit(0),eio(k)); y=lerp(GROUND-SH/2,slotY(0),eio(k))-Math.sin(k*Math.PI)*40; r=lerp(0,rot(0),k);}
+    } else {
+      const hw=handW(P,TX,dy,"f"), hw2=handW(P,TX,dy,"b"), cp=[(hw[0]+hw2[0])/2,(hw[1]+hw2[1])/2-20];
+      if(ts<c){const k=Pr(ts,tt,c); x=lerp(from[0],cp[0],k); y=lerp(from[1],cp[1],k)-Math.sin(k*Math.PI)*220; r=(1-k)*360*1.5;}
+      else {const k=Pr(ts,c,p-.05); x=lerp(cp[0],TX+jit(i),eio(k)); y=lerp(cp[1],slotY(i),eio(k)); r=lerp(0,rot(i),k);}
+    }
+    put(ts>=c, stone(x,y,sw(w),w,r));
+  });
+  // big stone
+  const top=GROUND-SH*WORDS.length;
+  if(ts>=12.6&&ts<BIGPLACE){
+    let x,y,r=0; const carry=[300,GROUND-470];
+    if(ts<13.6){ const k=Pr(ts,12.6,13.0); x=lerp(300,carry[0],k); y=lerp(GROUND-300,carry[1],eo(k))+Math.sin(ts*14)*4; r=Math.sin(ts*6)*3; }
+    else { const P=dokPose(ts), dy=feetY(ts), hw=handW(P,TX,dy,"f"), hw2=handW(P,TX,dy,"b"), cp=[(hw[0]+hw2[0])/2,(hw[1]+hw2[1])/2-175];
+      if(ts<14.45){const k=Pr(ts,13.6,14.45); x=lerp(carry[0],cp[0],k); y=lerp(carry[1],cp[1],k)-Math.sin(k*Math.PI)*260; r=lerp(-20,0,k);}
+      else if(ts<14.8){x=cp[0]; y=cp[1]+Math.sin(Pr(ts,14.45,14.8)*Math.PI)*30; }
+      else {const k=Pr(ts,14.8,BIGPLACE-.05); x=lerp(cp[0],TX,eio(k)); y=lerp(cp[1],top-BIG.h/2,eio(k));}
+    }
+    put(ts>=14.8, stone(x,y,280,BIG.w,r,1,{h:BIG.h,red:1,fs:34,glow:.8}));
+  }
+  return s;}
+
+function tower(ts){
+  let s="";
+  WORDS.forEach((w,i)=>{ if(ts>=placeT(i)) { const land=Pr(ts,placeT(i)-.05,placeT(i)+.15); s+=stone(TX+jit(i),slotY(i)+ (land<1?-(1-eob(land))*6:0),sw(w),w,rot(i)); }});
+  const top=GROUND-SH*WORDS.length;
+  if(ts>=BIGPLACE) s+=stone(TX,top-BIG.h/2,280,BIG.w,0,1,{h:BIG.h,red:1,fs:34,glow:.6+.4*Math.sin(ts*3)});
+  // dust puffs
+  WORDS.forEach((w,i)=>{const k=Pr(ts,placeT(i),placeT(i)+.5); if(k>0&&k<1) for(let d=0;d<6;d++){const a=(d/6)*Math.PI+Math.PI; s+=`<circle cx="${TX+Math.cos(a)*(sw(w)/2+k*60)*(d%2?1:-1)}" cy="${slotY(i)+20-k*30*hash(d)}" r="${10*(1-k)+4}" fill="#aab2c2" opacity="${(1-k)*.5}"/>`;}});
+  return s;}
+
+function world(ts,t){
+  let s=`<rect x="-1500" y="-2500" width="4080" height="6000" fill="url(#gSky)"/>`;
+  for(let i=0;i<70;i++){const x=hash(i)*2400-700, y=hash(i+40)*1900-900, tw=.35+.65*Math.abs(Math.sin(t*1.3+i)); s+=`<circle cx="${x}" cy="${y}" r="${1.5+hash(i+3)*2.5}" fill="#dfe6f5" opacity="${(.25+.5*hash(i+9))*tw}"/>`;}
+  // moon behind tower top
+  const mx=850, my=330;
+  s+=`<circle cx="${mx}" cy="${my}" r="520" fill="url(#gGlow)"/><circle cx="${mx}" cy="${my}" r="150" fill="url(#gMoon)"/><circle cx="${mx-50}" cy="${my+40}" r="22" fill="#c3c9d3" opacity=".6"/><circle cx="${mx+40}" cy="${my-50}" r="14" fill="#c3c9d3" opacity=".5"/><circle cx="${mx+60}" cy="${my+60}" r="10" fill="#c3c9d3" opacity=".5"/>`;
+  // ground
+  s+=`<rect x="-1500" y="${GROUND}" width="4080" height="2500" fill="#0a0d15"/><path d="M-1500 ${GROUND} L2580 ${GROUND}" stroke="#4a5266" stroke-width="4"/>`;
+  s+=`<ellipse cx="${TX}" cy="${GROUND+6}" rx="200" ry="14" fill="#000" opacity=".5"/>`;
+  const crowd=crowdState(ts);
+  let cs=""; crowd.forEach(c=>{ s+=`<ellipse cx="${c.x}" cy="${GROUND+4}" rx="50" ry="8" fill="#000" opacity=".4"/>`; });
+  crowd.filter(c=>c.back).forEach(c=>cs+=cman(c.x,c.y,c.sc,c.o,ts,c.seed).s);
+  crowd.filter(c=>!c.back).forEach(c=>cs+=cman(c.x,c.y,c.sc,c.o,ts,c.seed).s);
+  s+=cs;
+  s+=tower(ts);
+  const fy=feetY(ts), P=dokPose(ts);
+  s+=`<circle cx="${TX}" cy="${fy-190}" r="300" fill="url(#gHero)"/>`;
+  s+=flying(ts,crowd,'back');
+  s+=dok(TX,fy,P);
+  s+=flying(ts,crowd,'front');
+  // laugh text bubbles early
+  if(ts>3&&ts<6.4){ ["HAHA","LOL","HAHA"].forEach((w,i)=>{const k=Pr(ts,3.2+i*.7,4.4+i*.7); if(k>0&&k<1) s+=T_(120+i*120,1180-k*120-i*20,w,36,{c:"#8f97a8",op:Math.sin(k*Math.PI)*.8,w:900});}); }
+  return s;}
+
+/* ---------- camera ---------- */
+function camF(ts){
+  const fy=feetY(ts);
+  const A=[540,1170,lerp(1.22,1.3,Pr(ts,3,6.3))];
+  const fc=[590, Math.min(1170,(GROUND-180+fy-380)/2+90), 1.08];
+  const W=[560,1000,.8];
+  const Cr=[250,1230,lerp(1.5,1.62,Pr(ts,17.4,19.1))];
+  const E=[810,470,lerp(1.55,1.85,eo(Pr(ts,19.1,21.8)))];
+  const mix=(p,q,k)=>[lerp(p[0],q[0],k),lerp(p[1],q[1],k),lerp(p[2],q[2],k)];
+  let c;
+  if(ts<6.3) c=A; else if(ts<15.4) c=mix(A,fc,eio(Pr(ts,6.3,7.0)));
+  else if(ts<17.4) c=mix(fc,W,eio(Pr(ts,15.4,16.4)));
+  else if(ts<19.1) c=Cr; else c=E;
+  let z=c[2];
+  [14.45,BIGPLACE].forEach((b,i)=>{const k=Pr(ts,b,b+.35); if(k>0&&k<1) z+=(i?.05:.08)*(1-eo(k));});
+  WORDS.forEach((_,i)=>{const k=Pr(ts,placeT(i),placeT(i)+.25); if(k>0&&k<1) z+=.018*(1-k);});
+  return [c[0],c[1],z];}
+
+/* ---------- time map: hook -> rewind -> story ---------- */
+const DUR=22.0;
+function tsOf(t){ if(t<2.0) return 16.7+t*.35; if(t<2.7) return lerp(17.4,3.0,eio(Pr(t,2.0,2.7))); return t+.3; }
+
+function caption(txt,y,k,sz=74){ if(k<=0) return ""; const n=Math.floor(clamp(k)*txt.length);
+  return T_(540,y,txt.slice(0,n),sz,{f:"Caladea,Georgia,serif",it:1,w:700,c:"#f2f4f8"});}
+
+function render(t){
+  const ts=tsOf(t);
+  let [cx,cy,z]= t<2.0 ? [560,1000,.8+t*.02] : camF(ts);
+  if(t>=2.0&&t<2.7) { const k=eio(Pr(t,2.0,2.7)); const c2=camF(3.0); cx=lerp(560,c2[0],k); cy=lerp(1000,c2[1],k); z=lerp(.84,c2[2],k); }
+  let sh=0; [[14.45,.35,9],[BIGPLACE,.4,12]].forEach(([a,d,m])=>{const k=Pr(ts,a,a+d); if(k>0&&k<1&&t>2.7) sh+=m*(1-k);});
+  WORDS.forEach((_,i)=>{const k=Pr(ts,placeT(i),placeT(i)+.2); if(k>0&&k<1&&t>2.7) sh+=4*(1-k);});
+  document.getElementById("w").innerHTML=`<g transform="translate(${540+Math.sin(t*93)*sh} ${960+Math.cos(t*71)*sh}) scale(${z}) translate(${-cx} ${-cy})">${world(ts,t)}</g>`;
+  // overlay
+  let ov="";
+  ov+=`<image href="wm_light.png" x="0" y="0" width="1080" height="1920" opacity=".9"/>`;
+  if(t<2.0) ov+=caption("They threw stones at him.",1700,Pr(t,0,1.0),70);
+  if(t>=2.0&&t<2.7){ const k=Pr(t,2.0,2.7);
+    for(let i=0;i<14;i++){const y=(hash(i+Math.floor(t*30))*1920); ov+=`<rect x="0" y="${y}" width="1080" height="${4+hash(i)*18}" fill="#fff" opacity="${.08+hash(i+2)*.15}"/>`;}
+    ov+=T_(130,240,"◀◀",80,{c:"#fff",a:"start",op:.9})+`<rect width="1080" height="1920" fill="#000" opacity="${Math.sin(k*Math.PI)*.25}"/>`; }
+  if(ts>=19.3) { ov+=caption("Every stone they threw",300,Pr(ts,19.3,20.3),68); ov+=caption("became a step.",390,Pr(ts,20.4,21.1),68); }
+  document.getElementById("ov").innerHTML=ov;
+  // flashes on cuts
+  let fl=0; [[2.7,.25,.5]].forEach(([a,d,m])=>{const k=Pr(t,a,a+d); if(k>0&&k<1) fl=Math.max(fl,(1-k)*m);});
+  [[17.4,.2,.4],[19.1,.2,.4],[BIGPLACE,.3,.55]].forEach(([a,d,m])=>{const k=Pr(ts,a,a+d); if(k>0&&k<1&&t>2.7) fl=Math.max(fl,(1-k)*m);});
+  document.getElementById("flash").style.opacity=fl;
+  document.getElementById("cam").style.transform="";
+}
+window.render=render; render(+(new URLSearchParams(location.search).get("t")||0));
+</script></body></html>
