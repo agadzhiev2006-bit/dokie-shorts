@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"><style>*{margin:0}body{width:1000px;height:1000px;overflow:hidden;background:#000}</style></head><body>
+<svg width="1000" height="1000" viewBox="0 0 1000 1000"><defs>
+<radialGradient id="bg" cx=".5" cy=".42" r=".75"><stop offset="0" stop-color="#2a3550"/><stop offset=".45" stop-color="#141b2d"/><stop offset="1" stop-color="#05070c"/></radialGradient>
+<radialGradient id="moon" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#eef1f6"/><stop offset=".75" stop-color="#c9cfd9"/><stop offset="1" stop-color="#a9b1be"/></radialGradient>
+<radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#cfd8ea" stop-opacity=".45"/><stop offset=".5" stop-color="#7d8db0" stop-opacity=".12"/><stop offset="1" stop-color="#7d8db0" stop-opacity="0"/></radialGradient>
+<clipPath id="cl"><rect x="0" y="0" width="1080" height="1110"/></clipPath><linearGradient id="fd" x1="0" y1="0" x2="0" y2="1"><stop offset=".72" stop-color="#05070c" stop-opacity="0"/><stop offset="1" stop-color="#05070c" stop-opacity=".95"/></linearGradient><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2"/><feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .08 0"/></filter>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg)"/>
+<g id="stars"></g>
+<circle cx="500" cy="345" r="560" fill="url(#glow)"/>
+<circle cx="500" cy="345" r="390" fill="url(#moon)" opacity=".62"/>
+<circle cx="380" cy="300" r="34" fill="#b9c1cd" opacity=".45"/><circle cx="640" cy="520" r="24" fill="#b9c1cd" opacity=".4"/><circle cx="660" cy="270" r="16" fill="#b9c1cd" opacity=".4"/>
+<g id="d"></g>
+<rect width="1000" height="1000" filter="url(#n)"/>
+<rect width="1000" height="1000" fill="url(#fd)"/>
+</svg>
+<script src="../engine/man.js"></script>
+<script>
+const P={lean:0,tilt:-3,b:[-24,-10],f:[24,10],lb:[-6,2],lf:[6,-2],ex:{look:-23,px:0,brow:6,brow2:2,lid:5}};
+document.getElementById('d').innerHTML=`<g transform="translate(500 375) scale(1.85) translate(-540 -795)"><g clip-path="url(#cl)">${manSVG(P)}</g></g>`;
+let s='';for(let i=0;i<40;i++){const h=n=>{const x=Math.sin(n*127.1)*43758.5453;return x-Math.floor(x)};s+=`<circle cx="${h(i)*1000}" cy="${h(i+50)*1000}" r="${1+h(i+9)*2.2}" fill="#dfe6f5" opacity="${.2+h(i+3)*.5}"/>`;}
+document.getElementById('stars').innerHTML=s;
+</script></body></html>
