@@ -1,0 +1,2 @@
+# usage: put Nathan VO (ElevenLabs flow "Dokie — Polite vs Potty Mouth", take kEojr3FKvgdfEocU2RWi, 37.92s) here as vo.mp3, render frames into fr/, then:
+ffmpeg -y -framerate 30 -i fr/%04d.jpg -i vo.mp3 -i sfx.wav -i wm.png -filter_complex "[0][3]overlay,format=yuv420p[v];[2]volume=0.6[s];[1][s]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95[a]" -map "[v]" -map "[a]" -c:v libx264 -crf 20 -preset slow -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart -t 38.3 polite_vs_potty_mouth.mp4
