@@ -9,8 +9,8 @@
  <radialGradient id="gMoon" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#cfe0ff" stop-opacity=".55"/><stop offset="1" stop-color="#cfe0ff" stop-opacity="0"/></radialGradient>
  <radialGradient id="gCold" cx=".5" cy=".3" r=".8"><stop offset="0" stop-color="#e8f1ff" stop-opacity=".55"/><stop offset="1" stop-color="#e8f1ff" stop-opacity="0"/></radialGradient>
  <linearGradient id="gHall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2e6c9"/><stop offset="1" stop-color="#cdbb93"/></linearGradient>
- <clipPath id="cA"><rect x="40" y="150" width="1000" height="740" rx="28"/></clipPath>
- <clipPath id="cB"><rect x="40" y="1070" width="1000" height="740" rx="28"/></clipPath>
+ <clipPath id="cA"><rect x="0" y="0" width="1080" height="960"/></clipPath>
+ <clipPath id="cB"><rect x="0" y="960" width="1080" height="960"/></clipPath>
 </defs><g id="w"></g></svg>
 <div id="grain"></div>
 <script src="../tomorrow/man.js"></script>
@@ -19,7 +19,7 @@
 <script>
 const DUR=20;
 /* panel origins */
-const PA=[40,150], PB=[40,1070], FL=620, PH=740; /* floor y inside panel */
+const PA=[40,0], PB=[40,960], FL=820, PH=960; /* floor y inside panel */
 const blinkF=(t,o=0)=>((t+o)%3.4)<.12?1:0;
 
 function bubble(x,y,txt,k,o={}){ if(k<=0) return ""; const sz=(o.sz||30)*1.2, w=Math.max(90,txt.length*sz*.56+44), h=sz+34, s=eob(Math.min(1,k*1.6));
@@ -52,25 +52,25 @@ function door(x,y,open,hall){
 function bed(x,y,col){return `<rect x="${x}" y="${y}" width="270" height="46" rx="10" fill="${col}"/><rect x="${x-6}" y="${y-60}" width="20" height="150" rx="6" fill="#1a1c26"/><rect x="${x+12}" y="${y-18}" width="70" height="26" rx="12" fill="#d9dce6" opacity=".8"/><rect x="${x}" y="${y+46}" width="270" height="44" fill="#14161e"/>`;}
 
 function roomStrict(t,light){
-  let s=`<rect width="1000" height="740" fill="#151926"/>`;
-  s+=`<rect y="${FL}" width="1000" height="100" fill="#0e1018"/>`;
-  s+=`<rect x="420" y="120" width="120" height="90" fill="#1d2230" stroke="#262c3d" stroke-width="5"/>`; /* empty frame */
+  let s=`<rect x="-40" width="1080" height="960" fill="#151926"/>`;
+  s+=`<rect x="-40" y="${FL}" width="1080" height="140" fill="#0e1018"/>`;
+  s+=`<rect x="420" y="260" width="120" height="90" fill="#1d2230" stroke="#262c3d" stroke-width="5"/>`; /* empty frame */
   s+=`<rect x="600" y="300" width="40" height="${FL-300}" fill="#11141d" opacity=".0"/>`;
   /* moonlight wash */
-  s+=`<ellipse cx="200" cy="530" rx="260" ry="120" fill="url(#gMoon)" opacity=".5"/>`;
+  s+=`<ellipse cx="200" cy="730" rx="260" ry="120" fill="url(#gMoon)" opacity=".5"/>`;
   return s;}
 function roomChill(t){
-  let s=`<rect width="1000" height="740" fill="#2a2140"/>`;
-  s+=`<rect y="${FL}" width="1000" height="100" fill="#1d1630"/>`;
+  let s=`<rect x="-40" width="1080" height="960" fill="#2a2140"/>`;
+  s+=`<rect x="-40" y="${FL}" width="1080" height="140" fill="#1d1630"/>`;
   /* posters */
-  s+=`<rect x="420" y="130" width="70" height="96" rx="4" fill="#7d6cf0"/><rect x="505" y="150" width="58" height="76" rx="4" fill="#e889a8" opacity=".9"/>`;
+  s+=`<rect x="420" y="270" width="70" height="96" rx="4" fill="#7d6cf0"/><rect x="505" y="290" width="58" height="76" rx="4" fill="#e889a8" opacity=".9"/>`;
   /* fairy lights */
-  let p="M60 90"; for(let i=1;i<=10;i++) p+=` Q${60+i*40-20} ${112} ${60+i*40} 90`;
+  let p="M60 210"; for(let i=1;i<=10;i++) p+=` Q${60+i*40-20} ${232} ${60+i*40} 210`;
   s+=`<path d="${p}" stroke="#4b3d66" stroke-width="3" fill="none"/>`;
-  for(let i=0;i<10;i++){const tw=.6+.4*Math.sin(t*3+i*1.7); s+=`<circle cx="${80+i*40}" cy="102" r="6" fill="#ffd98a" opacity="${tw}"/><circle cx="${80+i*40}" cy="102" r="16" fill="#ffd98a" opacity="${tw*.18}"/>`;}
+  for(let i=0;i<10;i++){const tw=.6+.4*Math.sin(t*3+i*1.7); s+=`<circle cx="${80+i*40}" cy="222" r="6" fill="#ffd98a" opacity="${tw}"/><circle cx="${80+i*40}" cy="222" r="16" fill="#ffd98a" opacity="${tw*.18}"/>`;}
   /* floor lamp + glow */
-  s+=`<ellipse cx="610" cy="330" rx="260" ry="230" fill="url(#gLamp)"/>`;
-  s+=`<rect x="606" y="300" width="8" height="${FL-300}" fill="#14111d"/><path d="M580 300 L640 300 L628 262 L592 262 Z" fill="#ffe2a8"/>`;
+  s+=`<ellipse cx="610" cy="500" rx="300" ry="280" fill="url(#gLamp)"/>`;
+  s+=`<rect x="606" y="470" width="8" height="${FL-470}" fill="#14111d"/><path d="M580 470 L640 470 L628 432 L592 432 Z" fill="#ffe2a8"/>`;
   /* plant */
   for(let i=0;i<7;i++) s+=`<path d="M960 ${FL-40} q${-30+i*10} -70 ${-40+i*14} -100" stroke="#5fcf8f" stroke-width="7" fill="none" stroke-linecap="round"/>`;
   s+=`<path d="M935 ${FL-40} L985 ${FL-40} L978 ${FL} L942 ${FL} Z" fill="#4b3d66"/>`;
@@ -79,17 +79,17 @@ function roomChill(t){
   return s;}
 
 /* ---------- characters ---------- */
-const KS=.8, PS=1.0;
+const KS=.95, PS=1.18;
 const fg=(x,y,s,P,dir)=>fig(x,y,s,P,dir).s;
 
 function panelStrict(t){
   let s=roomStrict(t);
   const winOpen=t>6.4&&t<12.9?1:(t>12.9?Math.max(0,1-Pr(t,12.9,13.4)):Pr(t,6.1,6.4));
-  s+=window_(90,190,230,250,winOpen,t);
-  s+=curtain(90,180,270,t,t>7&&t<12.9?1:.15);
-  s+=bed(70,530,"#2a3044");
+  s+=window_(90,300,250,300,winOpen,t);
+  s+=curtain(90,290,320,t,t>7&&t<12.9?1:.15);
+  s+=bed(70,730,"#2a3044");
   const doorOpen= t<3.9?1: t<4.4?1-Pr(t,3.9,4.4): t<13.0?0: t<13.15?Pr(t,13.0,13.15):(t<16.8?1:1-Pr(t,16.8,17.3));
-  s+=door(800,280,doorOpen,"url(#gHall)");
+  s+=door(800,440,doorOpen,"url(#gHall)");
   /* dad */
   const dadOn=(t<4.2)||(t>=13.0&&t<17.2);
   if(dadOn){ let P={lean:0,tilt:0,blink:blinkF(t,1)};
@@ -112,26 +112,26 @@ function panelStrict(t){
   s+=bub(t,.4,2.3,kx+20,ky-120,"Can I go out tonight?",{left:1});
   s+=bub(t,2.4,3.8,850,FL-176*PS-150,"No.",{sz:38});
   s+=bub(t,13.5,15.6,850,FL-176*PS-150,"Where were you?!",{sz:32});
-  s+=bub(t,15.6,17.1,kx+10,ky-120,"...you said no.",{left:1});
+  s+=bub(t,15.6,17.1,kx+10,ky-120,"I asked. You said no.",{left:1});
   /* lights: dark room until 13.0, cold light on 13-17 */
   const on= t>=13.0&&t<17.2 ? 1-Pr(t,16.9,17.2)*.0 : 0;
-  s+=`<rect width="1000" height="740" fill="#05060c" opacity="${.38-on*.3}"/>`;
-  if(on) s+=`<rect width="1000" height="740" fill="url(#gCold)" opacity="${on*(t<13.25?1.6:.9)}"/>`;
-  if(t>=17.2) s+=`<rect width="1000" height="740" fill="#04050a" opacity="${Pr(t,17.2,17.8)*.25}"/>`;
+  s+=`<rect x="-40" width="1080" height="960" fill="#05060c" opacity="${.38-on*.3}"/>`;
+  if(on) s+=`<rect x="-40" width="1080" height="960" fill="url(#gCold)" opacity="${on*(t<13.25?1.6:.9)}"/>`;
+  if(t>=17.2) s+=`<rect x="-40" width="1080" height="960" fill="#04050a" opacity="${Pr(t,17.2,17.8)*.25}"/>`;
   return s;}
 
 function panelChill(t){
   let s=roomChill(t);
-  s+=window_(90,190,230,250,0,t);
-  s+=bed(70,530,"#5b4a86");
+  s+=window_(90,300,250,300,0,t);
+  s+=bed(70,730,"#5b4a86");
   const doorOpen= t<4.6?0: t<6.2? (t<4.9?Pr(t,4.6,4.9):(t<5.9?1:1-Pr(t,5.9,6.2))) : t<8.6?0 : t<9.7?(t<8.9?Pr(t,8.6,8.9):1-Pr(t,9.4,9.7)):0;
-  s+=door(860,280,doorOpen,"url(#gHall)");
+  s+=door(860,440,doorOpen,"url(#gHall)");
   /* parent in armchair (faces left) */
+  const px=720, py=FL-70;
   let P={blink:blinkF(t,.7),brow:-.2}; Object.assign(P,SITP);
-  const book=t<10.6; if(book){P.f=[120,40]; P.b=[110,50];}
-  if(t>2.3&&t<3.9){ P.tilt=-6; P.f=[100,170]; }
+  const book=false; const knee=[px-84*PS,py]; P.fW=[knee[0]+4,knee[1]-8]; P.bW=[knee[0]+22,knee[1]-6]; P.fBend=-1; P.bBend=-1;
+  if(t>2.3&&t<3.9){ P.tilt=-6; }
   if(t>13){ const l=Math.sin(t*14)*Math.max(0,Math.sin((t-13)*1.5)); P.bob=-Math.abs(l)*6; P.lean=-4+l*3; P.tilt=-10; P.brow=-.5; }
-  const px=720, py=FL-60-10;
   s+=fg(px,py,PS,P,-1);
   if(book) s+=`<rect x="${px-92}" y="${py-108}" width="54" height="40" rx="4" fill="#e7e1d3" transform="rotate(-10 ${px-65} ${py-88})"/><path d="M${px-65} ${py-108} L${px-65} ${py-68}" stroke="#9a8f7a" stroke-width="3" transform="rotate(-10 ${px-65} ${py-88})"/>`;
   /* kid */
@@ -157,30 +157,33 @@ function panelChill(t){
 /* ---------- layout ---------- */
 const TIMES=[[0,"21:30"],[5.0,"22:40"],[8.4,"23:58"],[11.8,"01:15"]];
 function clockBand(t){
-  const y=968; let s="";
+  const y=960; let s="";
   if(t<17.3){
     let cur=TIMES[0][1], ch=-9; TIMES.forEach(([a,s1])=>{if(t>=a){cur=s1;ch=a;}});
     const k=Pr(t,ch,ch+.35), sc=ch>0?1+(1-eob(k))*.25:1;
+    s+=`<rect x="330" y="${y-62}" width="420" height="110" rx="55" fill="#0a0b12" stroke="#2c3142" stroke-width="3"/>`;
     /* analog icon */
     const hr=parseInt(cur), mn=parseInt(cur.slice(3)); const ha=((hr%12)+mn/60)*30, ma=mn*6;
-    s+=`<g transform="translate(395 ${y-12})"><circle r="34" fill="none" stroke="#c9cfe0" stroke-width="5"/><path d="M0 0 L${(Math.sin(ha*D)*18).toFixed(1)} ${(-Math.cos(ha*D)*18).toFixed(1)} M0 0 L${(Math.sin(ma*D)*26).toFixed(1)} ${(-Math.cos(ma*D)*26).toFixed(1)}" stroke="#c9cfe0" stroke-width="5" stroke-linecap="round"/></g>`;
-    s+=`<g transform="translate(560 ${y+10}) scale(${sc})">${T_(0,0,cur,78,{c:cur==="01:15"?"#ff8f7a":"#eef0f6",f:"Inter,sans-serif",w:900,ls:2})}</g>`;
+    s+=`<g transform="translate(400 ${y-8})"><circle r="34" fill="none" stroke="#c9cfe0" stroke-width="5"/><path d="M0 0 L${(Math.sin(ha*D)*18).toFixed(1)} ${(-Math.cos(ha*D)*18).toFixed(1)} M0 0 L${(Math.sin(ma*D)*26).toFixed(1)} ${(-Math.cos(ma*D)*26).toFixed(1)}" stroke="#c9cfe0" stroke-width="5" stroke-linecap="round"/></g>`;
+    s+=`<g transform="translate(578 ${y+20}) scale(${sc})">${T_(0,0,cur,78,{c:cur==="01:15"?"#ff8f7a":"#eef0f6",f:"Inter,sans-serif",w:900,ls:2})}</g>`;
   } else {
     const k=Pr(t,17.3,18.2);
-    s+=T_(540,y-14,"Same kid.",50,{f:"Caladea,Georgia,serif",it:1,w:700,c:"#eef0f6",op:k});
-    s+=T_(540,y+40,"Different parents.",50,{f:"Caladea,Georgia,serif",it:1,w:700,c:"#ffd59a",op:Pr(t,18.0,18.9)});
+    s+=`<rect x="200" y="${y-76}" width="680" height="150" rx="40" fill="#0a0b12" opacity="${Math.min(1,k*2)*.92}" stroke="#2c3142" stroke-width="3"/>`;
+    s+=T_(540,y-14,"Same kid.",54,{f:"Caladea,Georgia,serif",it:1,w:700,c:"#eef0f6",op:k});
+    s+=T_(540,y+40,"Different parents.",54,{f:"Caladea,Georgia,serif",it:1,w:700,c:"#ffd59a",op:Pr(t,18.0,18.9)});
   }
   return s;}
-function header(x,y,label,col){return `<g transform="translate(${x} ${y})"><rect x="0" y="-38" width="${label.length*21+56}" height="52" rx="26" fill="${col}"/>${T_(28,-3,label,30,{a:"start",c:"#0b0c12",f:"Inter,sans-serif",w:900,ls:3})}</g>`;}
+function header(x,y,label,col){const w=label.length*25+70; return `<g transform="translate(${x} ${y})"><rect x="${-w/2}" y="-42" width="${w}" height="60" rx="30" fill="${col}"/>${T_(0,-1,label,36,{c:"#0b0c12",f:"Inter,sans-serif",w:900,ls:3})}</g>`;}
 
 function render(t){
   let s=`<rect width="1080" height="1920" fill="#0a0b12"/>`;
-  s+=header(40,128,"STRICT PARENTS","#9fb2d6");
-  s+=`<g clip-path="url(#cA)"><g transform="translate(${PA[0]} ${PA[1]})">${panelStrict(t)}</g></g><rect x="40" y="150" width="1000" height="740" rx="28" fill="none" stroke="#2a2f40" stroke-width="3"/>`;
+  s+=`<g clip-path="url(#cA)"><g transform="translate(${PA[0]} ${PA[1]})">${panelStrict(t)}</g></g>`;
+  s+=`<g clip-path="url(#cB)"><g transform="translate(${PB[0]} ${PB[1]})">${panelChill(t)}</g></g>`;
+  s+=`<rect y="957" width="1080" height="6" fill="#0a0b12"/>`;
+  s+=header(540,88,"STRICT PARENTS","#9fb2d6");
+  s+=header(540,1100,"CHILL PARENTS","#ffcf8a");
   s+=clockBand(t);
-  s+=header(40,1048,"CHILL PARENTS","#ffcf8a");
-  s+=`<g clip-path="url(#cB)"><g transform="translate(${PB[0]} ${PB[1]})">${panelChill(t)}</g></g><rect x="40" y="1070" width="1000" height="740" rx="28" fill="none" stroke="#3a2f55" stroke-width="3"/>`;
-  s+=T_(540,1872,"@ROBINSMEDIA",30,{c:"#8b90a3",f:"Inter,sans-serif",w:800,ls:6});
+  s+=T_(540,1890,"@ROBINSMEDIA",26,{c:"#b9bccb",f:"Inter,sans-serif",w:800,ls:6});
   document.getElementById("w").innerHTML=s;
 }
 window.render=render; render(+(new URLSearchParams(location.search).get("t")||0));
