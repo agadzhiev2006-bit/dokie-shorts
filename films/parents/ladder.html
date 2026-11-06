@@ -1,0 +1,148 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>*{margin:0;padding:0}html,body{width:1080px;height:1920px;overflow:hidden;background:#05060b}svg{position:absolute;left:0;top:0}
+#grain{position:absolute;inset:0;opacity:.06;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+#flash{position:absolute;inset:0;background:#fff;opacity:0}
+</style></head><body>
+<svg id="sv" width="1080" height="1920"><defs>
+ <filter id="rim" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#cdd6ea"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#03040a"/><stop offset=".7" stop-color="#0b1022"/><stop offset="1" stop-color="#151a33"/></linearGradient>
+ <linearGradient id="bld" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1a2034"/><stop offset="1" stop-color="#0d1120"/></linearGradient>
+ <radialGradient id="gold" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffd76a" stop-opacity=".9"/><stop offset="1" stop-color="#ffd76a" stop-opacity="0"/></radialGradient>
+ <radialGradient id="warm" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb98a" stop-opacity=".45"/><stop offset="1" stop-color="#ffb98a" stop-opacity="0"/></radialGradient>
+ <radialGradient id="moon" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#dfe7ff" stop-opacity=".5"/><stop offset="1" stop-color="#dfe7ff" stop-opacity="0"/></radialGradient>
+</defs><g id="w"></g></svg>
+<div id="grain"></div><div id="flash"></div>
+<script src="../tomorrow/man.js"></script>
+<script src="../tomorrow/rig.js"></script>
+<script src="figlib.js"></script>
+<script>
+const ei=x=>clamp(x)**2;
+const DUR=22, GR=1700, ROOF=250, S=.62;
+const LB=[600,GR], LT=[642,ROOF-40];  /* ladder base/top */
+const lad=u=>[lerp(LB[0],LT[0],u), lerp(LB[1],LT[1],u)];
+const LEGH=168*S;
+
+function skyline(t){
+  let s=`<rect x="-600" y="-1200" width="2400" height="3400" fill="url(#sky)"/>`;
+  for(let i=0;i<90;i++){const x=hash(i)*2000-460, y=hash(i+90)*1500-500; s+=`<circle cx="${x}" cy="${y}" r="${1+hash(i+3)*2.2}" fill="#dfe6ff" opacity="${(.2+.6*hash(i+7))*(.6+.4*Math.sin(t*1.7+i))}"/>`;}
+  s+=`<circle cx="230" cy="170" r="260" fill="url(#moon)"/><circle cx="230" cy="170" r="70" fill="#e9eeff"/><circle cx="252" cy="152" r="62" fill="#0a0e1c" opacity=".92"/>`;
+  /* far city */
+  for(let i=0;i<14;i++){const x=-300+i*95, h=260+hash(i+20)*520; s+=`<rect x="${x}" y="${GR-h}" width="${80+hash(i)*30}" height="${h}" fill="#0c1022"/>`;
+    for(let j=0;j<10;j++) if(hash(i*13+j)>.62) s+=`<rect x="${x+12+(j%3)*22}" y="${GR-h+20+Math.floor(j/3)*40}" width="9" height="13" fill="#ffd98f" opacity=".45"/>`;}
+  return s;}
+function tower(t,prog){
+  let s=`<rect x="650" y="${ROOF}" width="520" height="${GR-ROOF}" fill="url(#bld)"/><rect x="650" y="${ROOF-14}" width="520" height="14" fill="#2a3150"/>`;
+  /* windows light up as he passes */
+  for(let r=0;r<18;r++) for(let c=0;c<5;c++){const y=ROOF+50+r*78, x=700+c*80; const lit=(GR-y)/(GR-ROOF)<prog+.02; s+=`<rect x="${x}" y="${y}" width="40" height="44" rx="3" fill="${lit?"#ffd98f":"#161b2e"}" opacity="${lit?.85:1}"/>`;}
+  const L=[["$0",1600],["$1K",1220],["$100K",820],["$1M",420]];
+  L.forEach(([w,y],i)=>{const on=(GR-y)/(GR-ROOF)<prog+.03; s+=`<rect x="664" y="${y-46}" width="${w.length*38+40}" height="64" rx="10" fill="#0a0d18" opacity=".85"/>`+T_(684,y,w,52,{a:"start",c:on?"#ffe2a0":"#5c6684",f:"Inter,sans-serif",w:900,ls:2});});
+  return s;}
+function ladder(t,wob){
+  const rot=wob; let s=`<g transform="rotate(${rot} ${LB[0]} ${LB[1]})">`;
+  s+=ln([[LB[0]-22,LB[1]],[LT[0]-22,LT[1]]],9,"#8b93a8")+ln([[LB[0]+22,LB[1]],[LT[0]+22,LT[1]]],9,"#8b93a8");
+  for(let u=.02;u<1;u+=.045){const p=lad(u); s+=ln([[p[0]-22,p[1]],[p[0]+22,p[1]]],6,"#8b93a8");}
+  return s+`</g>`;}
+function car(x,y,k){ return `<g transform="translate(${x} ${y})" filter="url(#rim)"><path d="M-210 0 L-200 -50 Q-120 -70 -60 -98 Q20 -112 90 -80 L200 -55 Q225 -40 220 0 Z" fill="#111318"/><path d="M-50 -88 Q20 -100 80 -76 L-60 -70 Z" fill="#3a4766"/></g><circle cx="${x-130}" cy="${y}" r="30" fill="#0a0a0d" stroke="#5a6070" stroke-width="5"/><circle cx="${x+140}" cy="${y}" r="30" fill="#0a0a0d" stroke="#5a6070" stroke-width="5"/><ellipse cx="${x+215}" cy="${y-30}" rx="40" ry="10" fill="#fff4c8" opacity="${.5*k}" filter="url(#glow)"/>`;}
+
+/* girl: fig + dress + bun */
+function girl(x,y,P,dir=1){const r=fig(x,y,S,Object.assign({thin:.9},P),dir);
+  const dress=`<path d="M${x-16*dir*S} ${y-80*S} L${x+26*dir*S} ${y-80*S} L${x+48*S} ${y+30*S} L${x-46*S} ${y+30*S} Z" fill="#b65c78" filter="url(#rim)"/>`;
+  const bun=`<circle cx="${r.C[0]-34*dir*S}" cy="${r.C[1]-30*S}" r="${20*S}" fill="#111113" filter="url(#rim)"/>`;
+  return bun+r.s+dress;}
+
+function man(t){
+  /* climb progress */
+  let u;
+  if(t<1.2) u=0; else if(t<4.6) u=lerp(0,.3,(t-1.2)/3.4);
+  else if(t<5.6) u=.3-Math.sin(Pr(t,4.6,5.6)*Math.PI)*.025;
+  else if(t<12) u=lerp(.3,.58,(t-5.6)/6.4); else if(t<15.4) u=lerp(.58,1,eio((t-12)/3.4)); else u=1;
+  return u;}
+
+function world(t){
+  const u=man(t), prog=t<15.4?u:1;
+  let s=skyline(t)+tower(t,prog);
+  s+=`<rect x="-600" y="${GR}" width="2400" height="400" fill="#06070d"/><path d="M-600 ${GR} L1800 ${GR}" stroke="#2a3150" stroke-width="4"/>`;
+  const wob= t>4.6&&t<6.2? Math.sin((t-4.6)*22)*2.2*(1-Pr(t,4.6,6.2)) : 0;
+  s+=ladder(t,wob);
+  /* car + rich guy */
+  let cx=-500, ck=0;
+  if(t>=6.8&&t<8.2){cx=lerp(-500,200,eo(Pr(t,6.8,8.2))); ck=1;}
+  else if(t>=8.2&&t<11.4){cx=200; ck=1;}
+  else if(t>=11.4&&t<12.6){cx=lerp(200,-600,ei(Pr(t,11.4,12.6))); ck=1;}
+  if(ck) s+=car(cx,GR-30,1);
+  if(t>=8.3&&t<11.3){ const rk=Pr(t,8.3,8.7), hx=lerp(260,370,eo(rk));
+    let P={belly:1.25,hat:1,brow:.3,blink:((t)%3)<.1?1:0}; if(t>9) {P.fW=[hx+120,GR-LEGH-60]; }
+    if(t>10.6) {P.tilt=8; P.f=[30,10];}
+    const r=fig(hx,GR-LEGH,S*1.05,P,1); s+=`<g opacity="${Math.min(rk*2,1-Pr(t,11.0,11.3))}">${r.s}`;
+    if(t>9&&t<10.6){ const g=.6+.4*Math.sin(t*9); s+=`<circle cx="${r.hf[0]}" cy="${r.hf[1]-6}" r="38" fill="url(#gold)" opacity="${g}"/><path d="M${r.hf[0]-6} ${r.hf[1]-20} l14 0 l0 26 l-7 6 l-7 -6 Z" fill="#ffd76a"/><circle cx="${r.hf[0]+1}" cy="${r.hf[1]-24}" r="9" fill="none" stroke="#ffd76a" stroke-width="4"/>`; }
+    s+=`</g>`; }
+  /* girl */
+  if(t<17.1){ let gx=482, gy=GR-LEGH, P={blink:((t+1)%3.2)<.1?1:0,brow:.1};
+    const hold=[lad(.07),lad(.1)]; P.fW=[hold[0][0]-18,hold[0][1]]; P.bW=[hold[1][0]-20,hold[1][1]]; P.lean=6;
+    if(t>4.6&&t<6.2){P.lean=-8; P.brow=-.8; gx=476;}
+    if(t>8.6&&t<11.2){P.tilt=-14; P.brow=.6;}           /* looks at rich guy */
+    if(t>9.9&&t<10.9){P.tilt=-6+Math.sin((t-9.9)*20)*14; P.brow=-.6;} /* shakes head no */
+    if(t>12&&t<16.6){P.tilt=-28; P.eyeY=-4;}            /* looks up at him */
+    if(t>16.6){P.tilt=-30; P.fW=[gx+20,GR-LEGH-190]; P.bW=null; P.b=[-20,-10];}
+    s+=girl(gx,gy,P,1); }
+  /* man on ladder / roof */
+  if(t<15.6){ const p=lad(u); const ph=t*5; const climbing=(t>1.2&&t<4.6)||(t>5.6&&t<15.4);
+    const hx=p[0]-46, hy=Math.min(p[1]-LEGH*.55, GR-LEGH);
+    let P={blink:((t+.5)%3.4)<.1?1:0,brow:.2,lean:6};
+    const c=climbing?Math.sin(ph):0;
+    P.fW=[p[0]-14, hy-120*S-c*26]; P.bW=[p[0]-18, hy-110*S+c*26];
+    P.lf=[20+c*30,-30-Math.max(0,c)*50]; P.lb=[20-c*30,-30-Math.max(0,-c)*50];
+    if(t>4.6&&t<5.6){P.lf=[-20,10]; P.brow=-1; P.eyeY=2;}
+    s+=fig(hx,hy,S,P,1).s;
+    if(t>4.8&&t<5.8) s+=`<path d="M${hx+28} ${hy-150} q6 10 0 16 q-6 -6 0 -16" fill="#bfe0ff" opacity="${1-Pr(t,5.4,5.8)}"/>`;
+  } else {
+    /* on roof */
+    let mx=700, my=ROOF-14-LEGH, P={blink:((t+.5)%3.4)<.1?1:0,brow:.4};
+    if(t<16.4){ mx=lerp(660,700,Pr(t,15.6,16.2)); }
+    else if(t<17.4){ /* kneel & reach down */ my=ROOF-14-LEGH+40; P.lean=40; P.lf=[80,-100]; P.lb=[20,-20]; P.fW=[mx-80,ROOF+40]; P.brow=.8; mx=690; }
+    else { mx=780; }
+    if(t>18.2){ P.tilt=-6; P.bW=[mx-50,my-60*S]; }
+    s+=fig(mx,my,S,P,-1).s;
+  }
+  /* girl flying up & on roof */
+  if(t>=17.1){ const k=Pr(t,17.1,17.85); const st=[482,GR-LEGH], en=[700,ROOF-14-LEGH];
+    const x=lerp(st[0],en[0],eio(k))-Math.sin(k*Math.PI)*90, y=lerp(st[1],en[1],eio(k))-Math.sin(k*Math.PI)*120;
+    if(k<1) for(let i=1;i<7;i++){const kk=Math.max(0,k-i*.04); const px=lerp(st[0],en[0],eio(kk))-Math.sin(kk*Math.PI)*90, py=lerp(st[1],en[1],eio(kk))-Math.sin(kk*Math.PI)*120; s+=`<circle cx="${px}" cy="${py-60}" r="${10-i}" fill="#ffd98f" opacity="${.5-i*.07}"/>`;}
+    let P={brow:.6,blink:0}; if(k<1){P.f=[150,170]; P.b=[130,160]; P.lf=[30,-60]; P.lb=[-10,-20];}
+    else { P.lean=-5; P.tilt=12; P.brow=.8; if(t>18.2){P.fW=[x+60,y-70*S];} }
+    s+=girl(x,y,P,1); }
+  /* warm glow & sparkles at end */
+  if(t>17.9){ const k=Pr(t,17.9,19); s+=`<ellipse cx="740" cy="${ROOF-120}" rx="320" ry="260" fill="url(#warm)" opacity="${k}"/>`;
+    for(let i=0;i<10;i++){const st=18.2+i*.35, kk=Pr(t,st,st+2.2); if(kk>0&&kk<1) s+=`<circle cx="${620+hash(i)*260}" cy="${ROOF-60-kk*240}" r="${3+hash(i+4)*3}" fill="#ffe2a8" opacity="${Math.sin(kk*Math.PI)*.9}"/>`;}
+    /* fireworks far */
+    [[19.0,300,-250],[19.8,900,-350],[20.6,150,-120]].forEach(([a,fx,fy],j)=>{const kk=Pr(t,a,a+1.3); if(kk>0&&kk<1) for(let r=0;r<14;r++){const an=r/14*Math.PI*2; s+=`<circle cx="${fx+Math.cos(an)*kk*120}" cy="${fy+Math.sin(an)*kk*120+kk*kk*40}" r="4" fill="${j%2?"#ffd98f":"#ff9fb4"}" opacity="${1-kk}"/>`;}});
+  }
+  return s;}
+
+function cam(t){
+  const W=[560,900,1.0];
+  const B=[360,1440,1.55];             /* bottom: rich guy scene */
+  const T=[740,ROOF-110,1.75];         /* rooftop end */
+  const mix=(p,q,k)=>[lerp(p[0],q[0],k),lerp(p[1],q[1],k),lerp(p[2],q[2],k)];
+  let c=[540,1300,1.35];               /* start low, close */
+  if(t<3) c=mix([520,1450,1.5],[540,1100,1.12],eio(Pr(t,.4,3)));
+  else if(t<7) c=mix([540,1100,1.12],W,eio(Pr(t,3,6)));
+  else if(t<12.4) c=mix(W,B,eio(Pr(t,7,8.2)))
+  else if(t<15.6) c=mix(B,W,eio(Pr(t,12.4,13.6)));
+  else if(t<18) c=mix(W,[640,720,1.05],eio(Pr(t,16.9,17.9)));
+  else c=mix([640,720,1.05],T,eio(Pr(t,18,20.5)));
+  if(t>=13.6&&t<15.6){ const k=Pr(t,13.6,15.6); c=mix(W,[600,620,1.2],eio(k)*.5); }
+  return c;}
+
+function render(t){
+  const [cx,cy,z]=cam(t);
+  let sh=0; [[4.65,.4,7],[17.85,.35,9]].forEach(([a,d,m])=>{const k=Pr(t,a,a+d); if(k>0&&k<1) sh+=m*(1-k);});
+  let s=`<g transform="translate(${540+Math.sin(t*90)*sh} ${960+Math.cos(t*70)*sh}) scale(${z}) translate(${-cx} ${-cy})">${world(t)}</g>`;
+  s+=T_(540,1880,"@ROBINSMEDIA",26,{c:"#9aa0b5",f:"Inter,sans-serif",w:800,ls:6,op:.8});
+  const fo=Pr(t,21.2,22)*.9; if(fo>0) s+=`<rect width="1080" height="1920" fill="#000" opacity="${fo}"/>`;
+  document.getElementById("w").innerHTML=s;
+  let fl=0; const k=Pr(t,17.85,18.1); if(k>0&&k<1) fl=(1-k)*.45; document.getElementById("flash").style.opacity=fl;
+}
+window.render=render; render(+(new URLSearchParams(location.search).get("t")||0));
+</script></body></html>
