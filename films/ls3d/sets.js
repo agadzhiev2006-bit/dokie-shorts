@@ -139,9 +139,9 @@ export function buildKitchen(scene){
     const lamp=o.lamp??1; K.lampSpot.intensity=15*lamp; K.lampFill.intensity=4*lamp; K.bulb.material.color.setHex(lamp>.05?0xffe2b3:0x555555); K.lampGlow.material.opacity=.35*lamp;
     const day={autumn:[0xffc89a,1.5,.55],late:[0xd8b8a0,1.0,.45],winter:[0xc9d6ee,1.1,.5],night:[0x6f88c0,.45,.28],spring:[0xfff0d0,2.2,.7]}[o.season||K.state.season];
     K.sun.color.setHex(day[0]); K.sun.intensity=day[1]; K.hemi.intensity=day[2];
-    K.door.rotation.y=-(o.door||0)*1.6; K.doorLight.intensity=(o.door||0)*3;
-    K.uppers[3].userData.door.rotation.y=(o.cab||0)*1.7; K.cabL.intensity=(o.cab||0)*1.5; K.cabMugs[2].visible=!o.cabTaken;
-    K.flame.visible=(o.flame||0)>.02; K.flame.children.forEach((f,i)=>f.scale.y=(o.flame||0)*(1+.3*Math.sin(t*25+i))); K.flameL.intensity=(o.flame||0)*.5;
+    K.door.rotation.y=-(o.door||0)*1.6; K.doorLight.intensity=(o.door||0)*3; K.doorLight.visible=K.doorLight.intensity>0;
+    K.uppers[3].userData.door.rotation.y=(o.cab||0)*1.7; K.cabL.intensity=(o.cab||0)*1.5; K.cabL.visible=K.cabL.intensity>0; K.cabMugs[2].visible=!o.cabTaken;
+    K.flame.visible=(o.flame||0)>.02; K.flame.children.forEach((f,i)=>f.scale.y=(o.flame||0)*(1+.3*Math.sin(t*25+i))); K.flameL.intensity=(o.flame||0)*.5; K.flameL.visible=K.flameL.intensity>0;
     K.knob.rotation.x=(o.knob||0)*Math.PI/2;
     K.kSteam.update(t,o.kSteam??.4);
     K.cupG.visible=o.cupG!==false; K.cupB.visible=!!o.cupB; K.stG.update(t,o.cupG===false?0:(o.kG??1)); K.stB.update(t,o.cupB?(o.kB??1):0); K.stG.g.visible=o.cupG!==false; K.stB.g.visible=!!o.cupB;
@@ -202,9 +202,9 @@ export function buildRoom(scene){ const R={}; const root=new THREE.Group(); scen
   R.hemi=new THREE.HemisphereLight(0x8a9ac0,0x20242e,.6); root.add(R.hemi);
   const ce=box(8,.05,6,0x252a38,{cast:false}); ce.position.y=2.82; root.add(ce);
   R.set=(o,t)=>{ const eve=o.eve||0; redraw(R.cityTex,(x,w,h)=>drawCity(x,w,h,eve,t)); redraw(R.tvTex,(x,w,h)=>drawTV(x,w,h,t,o.paused));
-    R.sun.intensity=eve?.25:1.0; R.sun.color.setHex(eve?0x5d74b0:0xc8d2e6); R.hemi.intensity=eve?.32:.6; R.tvL.intensity=(eve?4:2.5)*(o.paused?.6:1)*(.85+.15*Math.sin(t*7));
+    R.sun.intensity=eve?.25:1.9; R.sun.color.setHex(eve?0x5d74b0:0xc8d2e6); R.hemi.intensity=eve?.6:1.15; R.tvL.intensity=(eve?4:2.5)*(o.paused?.6:1)*(.85+.15*Math.sin(t*7));
     R.phone.visible=!!o.phoneOnCouch; R.phoneGlow.visible=!!o.phoneOnCouch&&!!o.phoneLit; R.phone.position.x=-.35+(o.buzz?Math.sin(t*90)*.003:0);
-    R.phoneL.intensity=0; if(o.phoneOnCouch&&o.phoneLit){R.phoneL.position.set(-.35,.6,.45); R.phoneL.intensity=1.2;} };
+    R.phoneL.intensity=0; if(o.phoneOnCouch&&o.phoneLit){R.phoneL.position.set(-.35,.6,.45); R.phoneL.intensity=1.2;} R.phoneL.visible=true; };
   return R;}
 
 /* ---------- STREET (night snow) ---------- */
@@ -250,6 +250,6 @@ export function buildFront(scene){ const F={}; const root=new THREE.Group(); sce
   F.moon=new THREE.DirectionalLight(0x8aa0d0,.8); F.moon.position.set(3,6,8); root.add(F.moon); F.hemi=new THREE.HemisphereLight(0x5068a0,0x30384c,.45); root.add(F.hemi);
   const N=900, pos=new Float32Array(N*3); const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3));
   F.snow=new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:.03,transparent:true,opacity:.85,depthWrite:false})); root.add(F.snow);
-  F.set=(o,t)=>{ const op=o.open||0; F.door.rotation.y=-op*1.5; F.spill.intensity=op*30;
+  F.set=(o,t)=>{ const op=o.open||0; F.door.rotation.y=-op*1.5; F.spill.intensity=op*30; F.spill.visible=op>0;
     for(let i=0;i<N;i++){ const sp=.5+hash(i+1)*.6; pos[i*3]=-5+hash(i)*10+Math.sin(t+i)*.1; pos[i*3+1]=3.6-((t*sp+hash(i+2)*4)%3.8); pos[i*3+2]=.2+hash(i+3)*5;} g.attributes.position.needsUpdate=true;};
   return F;}

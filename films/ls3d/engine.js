@@ -7,7 +7,7 @@ export const hash=n=>{const s=Math.sin(n*127.1+311.7)*43758.5453;return s-Math.f
 
 /* ---------------- renderer ---------------- */
 export const W=1920,H=1080;
-export const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+export const renderer=new THREE.WebGLRenderer({antialias:!location.search.includes('noaa'),preserveDrawingBuffer:true});
 renderer.setSize(W,H); renderer.setPixelRatio(1);
 renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.0;
@@ -19,7 +19,7 @@ export const camera=new THREE.PerspectiveCamera(32,W/H,.05,80);
 const matCache={};
 export function M(color,o={}){ const k=color+JSON.stringify(o); if(matCache[k]) return matCache[k];
   const m=o.basic?new THREE.MeshBasicMaterial({color,side:o.side||THREE.FrontSide,transparent:!!o.op,opacity:o.op??1})
-    :new THREE.MeshStandardMaterial({color,roughness:o.r??.92,metalness:0,emissive:o.em||0x000000,emissiveIntensity:o.ei??1,side:o.side||THREE.FrontSide,transparent:!!o.op,opacity:o.op??1});
+    :(location.search.includes('pbr')?new THREE.MeshStandardMaterial({color,roughness:o.r??.92,metalness:0,emissive:o.em||0x000000,emissiveIntensity:o.ei??1,side:o.side||THREE.FrontSide,transparent:!!o.op,opacity:o.op??1}):new THREE.MeshLambertMaterial({color,emissive:o.em||0x000000,emissiveIntensity:o.ei??1,side:o.side||THREE.FrontSide,transparent:!!o.op,opacity:o.op??1}));
   return matCache[k]=m; }
 /* silhouette material: near-black with fresnel rim (colour set per character) */
 export function silMat(rim=0xffd3a1, strength=.9){
