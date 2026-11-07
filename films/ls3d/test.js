@@ -1,0 +1,12 @@
+import {THREE,renderer,camera,Person,camKeys} from './engine.js';
+import {buildKitchen} from './sets.js';
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0d0b0a);
+const K=buildKitchen(scene);
+const G=new Person({s:.9,bun:1,shawl:0xb9773a,rim:0xffd3a1,rimK:.7}); scene.add(G.root);
+const B=new Person({s:1.0,phones:1,rim:0xffd3a1,rimK:.6}); scene.add(B.root);
+window.render=(t)=>{ K.set({season:'autumn',clock:3.97+t/3600,date:12,month:'NOVEMBER',cupB:1,lamp:1},t);
+  G.set({x:K.T.x-.78,z:K.T.z,yaw:90,drop:.33*.9,lL:[88,88],lR:[88,88],lean:6,tilt:8,aL:[62,8,30],aR:[58,8,34],brow:.4},t);
+  B.set({x:1.7,z:.3,yaw:-60,brow:.2,aL:[4,6,8],aR:[4,6,8]},t);
+  camKeys([[0,window.CP||[0.5,1.45,4.6],window.CT||[0.2,1.0,-.7],window.CF||32]],t);
+  renderer.render(scene,camera); window.READY=1; };
+window.render(1);
