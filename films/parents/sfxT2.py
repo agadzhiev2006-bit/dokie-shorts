@@ -1,0 +1,11 @@
+from sfx_lib import *
+for t in [0.6,6.6,12.3]: add(thud(.25),t,.4,.22)
+for t in [2.4,8.3,14.5]: add(pop(420,.12),t,0,.3)
+add(thud(.22),4.47,0,.3); add(thud(.12),4.71,0,.14)
+add(thud(.22),16.47,0,.3); add(thud(.12),16.71,0,.14)
+add(thud(.2),10.4,0,.15)
+for t in [6.0,11.9,17.3]: add(whoosh(.7,1800,200,.35),t-.35,0,.3)
+add(thud(.45),22.8,.5,.5)
+add(riser(3.0),25.5,0,.12)
+add(ding(523,3.5),28.4,0,.22)
+save('sfxT2.wav')

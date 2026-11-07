@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#333}</style></head><body>
+<svg id="sv" width="1080" height="600"><defs><filter id="rim"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#141214"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g id="w"></g></svg>
+<script src="../tomorrow/man.js"></script><script src="../tomorrow/rig.js"></script><script src="figlib.js"></script><script src="anim.js"></script>
+<script>
+let s=""; const tg=[[60,-150],[80,-60],[60,30],[20,120]]; // offsets from hip: up-forward, chest, low, floor
+[[1,1],[1,-1]].forEach(([dir,bend],row)=>{
+ tg.forEach((o,i)=>{const x=120+i*250, y=200+row*290; const k={x,y,s:1,dir,lean:i==3?45:0,bob:0};
+   const W=[x+o[0]*dir,y+o[1]]; const f=armAng(k,W,bend), b=armAng(k,[W[0]-10*dir,W[1]+6],bend);
+   s+=fig(x,y,1,{col:"#f4f1ea",f,b,lean:k.lean},dir).s+`<circle cx="${W[0]}" cy="${W[1]}" r="8" fill="red"/>`+`<text x="${x-60}" y="${y-250+60}" fill="#fff" font-size="22">bend ${bend}</text>`;});});
+document.getElementById('w').innerHTML=s;
+</script></body></html>

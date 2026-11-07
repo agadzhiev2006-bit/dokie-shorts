@@ -1,0 +1,182 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>*{margin:0;padding:0}html,body{width:1080px;height:1920px;overflow:hidden;background:#0b0a0a}svg{position:absolute;left:0;top:0}
+#grain{position:absolute;inset:0;opacity:.06;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(90% 60% at 50% 55%,transparent 45%,rgba(0,0,0,.72) 100%)}
+</style></head><body>
+<svg id="sv" width="1080" height="1920"><defs>
+ <filter id="rimD" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/><feFlood flood-color="#141214"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="rim" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#141214"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <radialGradient id="lampG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffcf91" stop-opacity=".55"/><stop offset="1" stop-color="#ffcf91" stop-opacity="0"/></radialGradient>
+ <radialGradient id="phG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#9fd0ff" stop-opacity=".55"/><stop offset="1" stop-color="#9fd0ff" stop-opacity="0"/></radialGradient>
+ <radialGradient id="shad" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+ <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9a3" stop-opacity=".35"/><stop offset="1" stop-color="#ffd9a3" stop-opacity="0"/></linearGradient>
+ <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2526"/><stop offset="1" stop-color="#3a3233"/></linearGradient>
+</defs><g id="w"></g></svg>
+<div id="vig"></div><div id="grain"></div>
+<script src="../tomorrow/man.js"></script>
+<script src="../tomorrow/rig.js"></script>
+<script src="figlib.js"></script>
+<script src="anim.js"></script>
+<script>
+const DUR=30, FL=1560, WHITE="#f4f1ea";
+const ST=s=>FL-168*s;                      /* standing hip y */
+function wfig(P){const r=fig(P.x,P.y,P.s,Object.assign({col:WHITE},P),P.dir);
+  r.s=r.s.replaceAll('url(#rim)','url(#rimD)').replaceAll('#efe8d6','#151316').replaceAll('#8b9098','#4a4446'); return r;}
+const shadow=(x,s)=>`<ellipse cx="${x}" cy="${FL+6}" rx="${70*s}" ry="${10*s}" fill="url(#shad)"/>`;
+
+/* ---------------- set ---------------- */
+function room(t){
+  let s=`<rect x="-400" y="0" width="1900" height="1920" fill="url(#wall)"/><rect x="-400" y="1180" width="1900" height="6" fill="#463c3c"/>`;
+  s+=`<path d="M-400 ${FL} L1500 ${FL} L1500 2100 L-400 2100 Z" fill="#231e1f"/><path d="M-400 ${FL} L1500 ${FL}" stroke="#4a4040" stroke-width="4"/>`;
+  s+=`<ellipse cx="560" cy="${FL+110}" rx="400" ry="72" fill="#3b2e30"/>`;
+  s+=`<rect x="360" y="640" width="330" height="360" fill="#3d3637"/><rect x="378" y="658" width="294" height="324" fill="#0c1020"/>`;
+  for(let i=0;i<16;i++) s+=`<circle cx="${390+hash(i)*270}" cy="${670+hash(i+5)*300}" r="${1.2+hash(i+9)*1.6}" fill="#dfe6ff" opacity="${.3+.5*Math.abs(Math.sin(t*.8+i))}"/>`;
+  s+=`<circle cx="600" cy="740" r="30" fill="#eef1ff"/><circle cx="614" cy="730" r="28" fill="#0c1020"/>`;
+  s+=`<path d="M525 658 L525 982 M378 820 L672 820" stroke="#3d3637" stroke-width="12"/><rect x="345" y="996" width="360" height="16" fill="#463c3c"/>`;
+  s+=`<rect x="780" y="560" width="120" height="96" fill="#463c3c"/><rect x="792" y="572" width="96" height="72" fill="#cbbfa8" opacity=".8"/>`;
+  return s;}
+function door(open){const x=830,y=930,w=210,h=FL-930;
+  let s=`<rect x="${x-14}" y="${y-14}" width="${w+28}" height="${h+14}" fill="#4a3f3f"/>`;
+  if(open>0.01) s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#c9b48e"/><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#000" opacity=".25"/>`;
+  const dw=w*(1-open*.82);
+  s+=`<rect x="${x}" y="${y}" width="${dw}" height="${h}" fill="#5a4c4b"/>`;
+  if(dw>60) s+=`<rect x="${x+16}" y="${y+24}" width="${dw-32}" height="${h*.42}" fill="none" stroke="#4a3e3d" stroke-width="5"/><rect x="${x+16}" y="${y+h*.52}" width="${dw-32}" height="${h*.42}" fill="none" stroke="#4a3e3d" stroke-width="5"/><circle cx="${x+dw-26}" cy="${y+h*.52}" r="9" fill="#c9a86a"/>`;
+  return s;}
+const lamp=()=>`<path d="M100 1290 L320 1290 L250 520 L170 520 Z" fill="url(#beam)" opacity=".35"/><ellipse cx="200" cy="560" rx="380" ry="340" fill="url(#lampG)"/><rect x="196" y="560" width="8" height="${FL-560}" fill="#151214"/><ellipse cx="200" cy="${FL}" rx="50" ry="10" fill="#151214"/><path d="M140 560 L260 560 L240 470 L160 470 Z" fill="#ffe2b0"/>`;
+const chairBack=()=>`<rect x="60" y="1200" width="70" height="340" rx="20" fill="#3c4256"/><rect x="100" y="1360" width="260" height="90" rx="20" fill="#454c63"/>`;
+const chairFront=()=>`<rect x="80" y="1420" width="300" height="70" rx="18" fill="#3c4256"/><rect x="300" y="1310" width="70" height="140" rx="20" fill="#3c4256"/><rect x="90" y="1490" width="16" height="70" fill="#2b2f3e"/><rect x="340" y="1490" width="16" height="70" fill="#2b2f3e"/>`;
+function ball(x,y,r=32,rot=0){return `<g transform="rotate(${rot} ${x} ${y})"><g filter="url(#rimD)"><circle cx="${x}" cy="${y}" r="${r}" fill="#d9302c"/></g><path d="M${x} ${y-r} Q${x+r*.45} ${y} ${x} ${y+r} M${x} ${y-r} Q${x-r*.45} ${y} ${x} ${y+r}" stroke="#8d1a17" stroke-width="3" fill="none"/></g><ellipse cx="${x-r*.35}" cy="${y-r*.4}" rx="${r*.25}" ry="${r*.15}" fill="#ff8a7a" opacity=".6"/>`;}
+function paper(x,y,rot=0){return `<g transform="translate(${x} ${y}) rotate(${rot})"><rect x="-60" y="-40" width="120" height="80" fill="#f4f1ea" filter="url(#rimD)"/><circle cx="-30" cy="-6" r="8" fill="none" stroke="#3a3a3a" stroke-width="3"/><path d="M-30 2 L-30 22 M-30 8 L-40 16 M-30 8 L-20 16 M-30 22 L-38 32 M-30 22 L-22 32" stroke="#3a3a3a" stroke-width="3"/><circle cx="2" cy="0" r="6" fill="none" stroke="#3a3a3a" stroke-width="3"/><path d="M2 6 L2 20 M2 20 L-4 28 M2 20 L8 28" stroke="#3a3a3a" stroke-width="3"/><circle cx="20" cy="22" r="6" fill="#d9302c"/><circle cx="38" cy="-24" r="8" fill="#f2c14e"/></g>`;}
+function suitcase(x,y){return `<g filter="url(#rimD)"><rect x="${x-36}" y="${y+6}" width="72" height="100" rx="10" fill="#6b5a4e"/></g><rect x="${x-14}" y="${y-8}" width="28" height="16" rx="5" fill="none" stroke="#141214" stroke-width="5"/><path d="M${x-36} ${y+40} h72" stroke="#4e4038" stroke-width="4"/>`;}
+function bubble(x,y,txt,k){ if(k<=0) return ""; const sz=46, w=txt.length*sz*.6+64, h=sz+40, sc=EZ.back(Math.min(1,k*1.4));
+  return `<g transform="translate(${x} ${y}) scale(${sc})" opacity="${Math.min(1,k*3)}"><rect x="${-w/2}" y="${-h}" width="${w}" height="${h}" rx="${h/2}" fill="#f4f1ea" opacity=".96"/><path d="M-14 -2 L-26 22 L6 -2 Z" fill="#f4f1ea" opacity=".96"/>${T_(0,-h/2+sz*.36,txt,sz,{c:"#1a1718",f:"Inter,sans-serif",w:800})}</g>`;}
+const bub=(t,a,b,x,y,txt)=>t>a&&t<b?bubble(x,y,txt,Pr(t,a,a+.35)*(1-Pr(t,b-.3,b))):"";
+
+/* ---------------- tracks ---------------- */
+const PS=.92, PY=ST(PS);
+const SEAT={x:225,y:1385,s:PS,dir:1,lean:0,hunch:6,tilt:16,lf:[90,-90],lb:[86,-86],fW:[312,1330],bW:[298,1338],brow:-.1};
+const nod=t0=>[{t:t0},{t:t0+.22,tilt:22,ez:"o"},{t:t0+.6,tilt:16}];
+const PAR=KF([
+  Object.assign({t:0},SEAT),
+  ...nod(2.4), ...nod(8.3), ...nod(14.5),
+  {t:19.6}, {t:20.15,tilt:-6,brow:.4,fW:[300,1380],bW:[290,1386],ez:"o"}, {t:20.9},
+  {t:21.5,tilt:10,brow:1}, {t:22.0},
+  {t:22.35,lean:28,tilt:12,fW:[318,1400],bW:[300,1404]},                         /* anticipation */
+  {t:23.05,x:280,y:PY,lean:6,lf:[2,-2],lb:[-2,2],fW:null,bW:null,f:[10,6],b:[-10,-4],hunch:10,tilt:12,ez:"io"},
+  {t:23.25,walk:0},{t:23.5,walk:1,x:320,ez:"i"},{t:24.25,x:410,ez:"lin"},{t:24.5,x:424,walk:0,ez:"o"},
+  {t:25.0,lean:52,tilt:22,fW:[470,FL+14],bW:[450,FL+18]},                         /* bend to ball */
+  {t:25.5,lean:4,tilt:18,fR:[54,-44],bR:[36,-38]},                  /* hold ball at chest */
+  {t:25.7,walk:0},{t:26.0,walk:1,x:470,ez:"i"},{t:27.6,x:740,ez:"lin"},{t:27.9,x:760,walk:0,ez:"o"},
+  {t:28.4,tilt:30,hunch:22,brow:1.2,fR:[46,-40],bR:[30,-34]},{t:30}
+]);
+PAR.forEach(k=>{ if(k.t>=25.5) {k.fHold=1;k.bHold=1;} });
+
+/* kid tracks */
+const K5=KF([
+  {t:0,x:930,y:ST(.5),s:.5,dir:-1,fR:[46,-62],bR:[30,-56],brow:.7},
+  {t:.55},{t:.85,walk:1,x:900,ez:"i"},{t:1.75,x:560,ez:"lin"},{t:2.0,x:540,walk:0,ez:"o"},
+  {t:2.1,lean:-6,ez:"o"},
+  {t:2.45,lean:10,fR:[100,-150],bR:[80,-142],brow:1,ez:"back"},      /* offers ball up */
+  {t:3.2},{t:3.6,lean:0,tilt:16,brow:-.7,fR:[44,-40],bR:[26,-34]},
+  {t:4.0},{t:4.15,f:[6,2],b:[-8,-2],ez:"o"},                                       /* lets go */
+  {t:4.4},{t:4.7,dir:1},{t:4.8,walk:0},{t:5.0,walk:1,x:570,ez:"i"},{t:5.9,x:940,tilt:18,ez:"lin"}
+]);
+const K7=KF([
+  {t:6.0,x:930,y:ST(.58),s:.58,dir:-1,fR:[50,-70],bR:[32,-62],brow:.7},
+  {t:6.6},{t:6.9,walk:1,x:900,ez:"i"},{t:7.8,x:580,ez:"lin"},{t:8.05,x:560,walk:0,ez:"o"},
+  {t:8.15,lean:-5,ez:"o"},{t:8.5,lean:8,fR:[104,-160],bR:[82,-150],brow:1,ez:"back"},
+  {t:9.2},{t:9.6,lean:0,tilt:16,brow:-.7,fR:[48,-46],bR:[30,-40]},
+  {t:9.9},{t:10.4,lean:42,tilt:24,fW:[612,FL+52],bW:[630,FL+56]},                   /* puts drawing down */
+  {t:10.8,lean:0,tilt:18,fW:null,bW:null,f:[8,4],b:[-8,-4]},
+  {t:10.95,dir:1},{t:11.0,walk:0},{t:11.15,walk:1,x:590,ez:"i"},{t:11.95,x:930,ez:"lin"}
+]);
+const K10=KF([
+  {t:11.9,x:930,y:ST(.66),s:.66,dir:-1,f:[8,4],b:[-8,-4],brow:.2},
+  {t:12.3},{t:12.6,walk:1,x:900,ez:"i"},{t:13.35,x:560,ez:"lin"},{t:13.6,x:540,walk:0,ez:"o"},
+  {t:14.05,lean:44,tilt:22,fW:[475,FL+14],bW:[497,FL+18]},                         /* picks up ball */
+  {t:14.5,lean:6,tilt:4,fR:[104,-150],bR:[82,-142],brow:.6,ez:"back"},
+  {t:15.3},{t:15.7,lean:0,tilt:20,brow:-.9,fR:[46,-46],bR:[28,-40]},
+  {t:16.0},{t:16.15,f:[6,2],b:[-8,-2],ez:"o"},
+  {t:16.35},{t:16.65,dir:1},{t:16.7,walk:0},{t:16.95,walk:1,x:570,ez:"i"},{t:17.6,x:900,tilt:22,ez:"lin"}
+]);
+const K18=KF([
+  {t:17.3,x:-160,y:ST(.9),s:.9,dir:1,walk:1,bHold:1,b:[-4,0],brow:-.1,tilt:2},
+  {t:19.5,x:780,ez:"lin"},{t:19.85,x:810,walk:0,ez:"o"},
+  {t:20.2,dir:-1,tilt:-2},{t:21.0},{t:21.4,dir:1},{t:21.5,walk:0},
+  {t:21.7,walk:1,x:840,ez:"i"},{t:22.3,x:1040,ez:"lin"}
+]);
+K18.forEach(k=>k.bHold=1);
+
+/* door openness */
+const DOOR=[[0,1],[.7,0],[4.9,0],[5.2,1],[5.9,1],[6.2,0],[6.3,0],[6.6,1],[6.9,0],[10.8,0],[11.1,1],[11.9,1],[12.2,0],[12.3,1],[12.6,0],[16.6,0],[16.9,1],[17.6,1],[17.9,0],[21.2,0],[21.5,1],[22.3,1],[22.8,0]];
+function doorAt(t){for(let i=1;i<DOOR.length;i++) if(t<DOOR[i][0]){const[a,b]=[DOOR[i-1],DOOR[i]]; return lerp(a[1],b[1],EZ.io((t-a[0])/(b[0]-a[0])));} return 0;}
+
+/* ball: physics-ish drops */
+function drop(t,t0,from,to){const k=Pr(t,t0,t0+.75); const y0=from[1], y1=to[1];
+  const fall=Pr(t,t0,t0+.32), b1=Pr(t,t0+.32,t0+.56), b2=Pr(t,t0+.56,t0+.75);
+  let y= fall<1? lerp(y0,y1,fall*fall) : b1<1? y1-Math.sin(b1*Math.PI)*46 : y1-Math.sin(b2*Math.PI)*14;
+  const x=lerp(from[0],to[0],EZ.o(k)); return [x,y,(x-from[0])*2];}
+
+/* ---------------- scene ---------------- */
+function scene(t){
+  let s=room(t)+lamp();
+  s+=door(doorAt(t));
+  s+=chairBack();
+  /* parent */
+  const P=pose(PAR,t,.3); if(t<20.15){ /* thumb scrolling */ }
+  const pr=wfig(P);
+  let props="";
+  const kidSeg = t<6.0?K5: t<11.9?K7: t<17.3?K10: K18;
+  const ks=kidSeg===K18?.9:0;
+  const KP=pose(kidSeg,t,1.1+ (kidSeg===K18?.0:0)); const kr=wfig(KP);
+  /* ball state */
+  const B1=[470,FL-2], B2=[488,FL-2];
+  let ballDraw="";
+  if(t<4.15){ const hx=(kr.hf[0]+kr.hb[0])/2, hy=(kr.hf[1]+kr.hb[1])/2; ballDraw=ball(hx-2*KP.dir,hy-8,28); }
+  else if(t<4.9){ const d=drop(t,4.15,[(kr.hf[0]+kr.hb[0])/2,ST(.5)+30],B1); ballDraw=ball(d[0],d[1]-30,30,d[2]); }
+  else if(t<14.05){ ballDraw=ball(B1[0],B1[1]-30,30); }
+  else if(t<16.15){ const hx=(kr.hf[0]+kr.hb[0])/2, hy=(kr.hf[1]+kr.hb[1])/2; ballDraw=ball(hx-2,hy-8,30); }
+  else if(t<16.9){ const d=drop(t,16.15,[B1[0]+20,ST(.66)+40],B2); ballDraw=ball(d[0],d[1]-30,30,d[2]); }
+  else if(t<25.0){ ballDraw=ball(B2[0],B2[1]-30,30); }
+  else { const hx=(pr.hf[0]+pr.hb[0])/2, hy=(pr.hf[1]+pr.hb[1])/2; ballDraw=ball(hx+8,hy-4,32); }
+  /* paper */
+  let paperDraw="";
+  if(t>=6.0&&t<10.4){ if(kidSeg===K7){const hx=(kr.hf[0]+kr.hb[0])/2, hy=(kr.hf[1]+kr.hb[1])/2; paperDraw=paper(hx-6,hy-34,-6+Math.sin(t*3)*2);} }
+  if(t>=10.4) paperDraw=paper(640,FL+66,-8);
+  /* phone glow & phone */
+  let phone="";
+  const phOn= t<20.1 ? 1 : t<21.5 ? 1-Pr(t,20.1,20.5) : 0;
+  if(phOn>0){ const hx=(pr.hf[0]+pr.hb[0])/2, hy=(pr.hf[1]+pr.hb[1])/2; phone=`<ellipse cx="${hx+10}" cy="${hy-34}" rx="80" ry="66" fill="url(#phG)" opacity="${phOn*(.85+.15*Math.sin(t*5))}"/><rect x="${hx-12}" y="${hy-38}" width="24" height="40" rx="5" fill="#16171b" stroke="#bfe0ff" stroke-width="3" transform="rotate(-10 ${hx} ${hy-18})"/>`; }
+  if(t>=20.1&&t<22.35){ const hx=(pr.hf[0]+pr.hb[0])/2, hy=(pr.hf[1]+pr.hb[1])/2; phone+=`<rect x="${hx-12}" y="${hy-20}" width="24" height="40" rx="5" fill="#16171b" stroke="#444" stroke-width="3"/>`; }
+  /* draw order */
+  s+=shadow(P.x,P.s)+pr.s.replace("","")+chairFront();
+  /* parent must be over chair when standing */
+  if(t>=22.6) s=room(t)+lamp()+door(doorAt(t))+chairBack()+chairFront()+shadow(P.x,P.s)+pr.s;
+  s+=phone;
+  s+=paperDraw;
+  const kidVis = !(kidSeg===K18 && t>22.25) && !(kidSeg!==K18 && (KP.x>925 && t>4.5 && (t%6)>0) && false);
+  if(kidVis){ s+=shadow(KP.x,KP.s)+kr.s; if(kidSeg===K18) s+=suitcase(kr.hb[0],kr.hb[1]); }
+  s+=ballDraw;
+  /* tears */
+  if(t>28.5){ for(let i=0;i<5;i++){const st=28.6+i*.45, k=Pr(t,st,st+.8); if(k>0&&k<1) s+=`<path d="M${pr.C[0]+16} ${pr.C[1]+6+k*110} q6 10 0 16 q-6 -6 0 -16" fill="#a9d6ff" opacity="${(1-k)*.95}"/>`;}}
+  /* bubbles */
+  s+=bub(t,2.4,3.9,330,1150,"Later.");
+  s+=bub(t,8.3,9.7,330,1150,"Later.");
+  s+=bub(t,14.5,15.9,330,1150,"Later...");
+  return s;}
+
+const AGES=[[0,"AGE 5"],[6.0,"AGE 7"],[11.9,"AGE 10"],[17.3,"AGE 18"]];
+function render(t){
+  const z=1.17+Pr(t,0,25)*.05+EZ.io(Pr(t,25.5,29))*.2, cx=lerp(560,690,EZ.io(Pr(t,25.5,29))), cy=lerp(1300,1290,Pr(t,25,29));
+  let s=`<g transform="translate(540 1130) scale(${z}) translate(${-cx} ${-cy})">${scene(t)}</g>`;
+  let cur=AGES[0], nx=null; AGES.forEach((a,i)=>{if(t>=a[0]){cur=a; nx=AGES[i+1];}});
+  const fin=EZ.o(Pr(t,cur[0]+.15,cur[0]+.7)), fout=nx?1-Pr(t,nx[0]-.45,nx[0]):1-Pr(t,22.4,23.2);
+  s+=`<g opacity="${Math.min(fin,fout)}" transform="translate(0 ${(1-fin)*12})">`+T_(540,250,cur[1],78,{c:"#d9d4ca",f:"Inter,sans-serif",w:800,ls:10})+`</g>`;
+  let bo=0; [6.0,11.9,17.3].forEach(a=>{const k=Math.max(0,1-Math.abs(t-a)/.45); bo=Math.max(bo,EZ.io(k));});
+  if(bo>0) s+=`<rect width="1080" height="1920" fill="#000" opacity="${bo}"/>`;
+  s+=T_(540,1880,"@ROBINSMEDIA",26,{c:"#8a8380",f:"Inter,sans-serif",w:800,ls:6,op:.8});
+  const fo=EZ.io(Pr(t,29.0,30)); if(fo>0) s+=`<rect width="1080" height="1920" fill="#000" opacity="${fo}"/>`;
+  document.getElementById("w").innerHTML=s;
+}
+window.render=render; render(+(new URLSearchParams(location.search).get("t")||0));
+</script></body></html>
