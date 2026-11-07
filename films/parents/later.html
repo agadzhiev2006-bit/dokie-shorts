@@ -1,0 +1,150 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>*{margin:0;padding:0}html,body{width:1080px;height:1920px;overflow:hidden;background:#0b0a0a}svg{position:absolute;left:0;top:0}
+#grain{position:absolute;inset:0;opacity:.07;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(90% 60% at 50% 55%,transparent 45%,rgba(0,0,0,.7) 100%)}
+</style></head><body>
+<svg id="sv" width="1080" height="1920"><defs>
+ <filter id="rimD" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/><feFlood flood-color="#141214"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="rim" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#141214"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="soft"><feGaussianBlur stdDeviation="1.2"/></filter>
+ <radialGradient id="lampG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffcf91" stop-opacity=".55"/><stop offset="1" stop-color="#ffcf91" stop-opacity="0"/></radialGradient>
+ <radialGradient id="phG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#9fd0ff" stop-opacity=".5"/><stop offset="1" stop-color="#9fd0ff" stop-opacity="0"/></radialGradient>
+ <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9a3" stop-opacity=".35"/><stop offset="1" stop-color="#ffd9a3" stop-opacity="0"/></linearGradient>
+ <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2526"/><stop offset="1" stop-color="#3a3233"/></linearGradient>
+</defs><g id="w"></g></svg>
+<div id="vig"></div><div id="grain"></div>
+<script src="../tomorrow/man.js"></script>
+<script src="../tomorrow/rig.js"></script>
+<script src="figlib.js"></script>
+<script>
+const DUR=29, FL=1560, WHITE="#f4f1ea";
+const ei=x=>clamp(x)**2;
+function wfig(x,y,s,P,dir){const r=fig(x,y,s,Object.assign({col:WHITE},P),dir);
+  r.s=r.s.replaceAll('url(#rim)','url(#rimD)').replaceAll('#efe8d6','#151316').replaceAll('#8b9098','#4a4446'); return r;}
+
+function room(t,aged){
+  let s=`<rect width="1080" height="1920" fill="url(#wall)"/>`;
+  /* wainscot line */
+  s+=`<rect y="1180" width="1080" height="6" fill="#463c3c"/>`;
+  /* floor */
+  s+=`<path d="M0 ${FL} L1080 ${FL} L1080 1920 L0 1920 Z" fill="#231e1f"/><path d="M0 ${FL} L1080 ${FL}" stroke="#4a4040" stroke-width="4"/>`;
+  /* rug */
+  s+=`<ellipse cx="540" cy="${FL+110}" rx="380" ry="70" fill="#3b2e30"/>`;
+  /* window with moon */
+  s+=`<rect x="360" y="640" width="330" height="360" fill="#3d3637"/><rect x="378" y="658" width="294" height="324" fill="#0c1020"/>`;
+  for(let i=0;i<16;i++) s+=`<circle cx="${390+hash(i)*270}" cy="${670+hash(i+5)*300}" r="${1.2+hash(i+9)*1.6}" fill="#dfe6ff" opacity="${.3+.5*Math.abs(Math.sin(t+i))}"/>`;
+  s+=`<circle cx="600" cy="740" r="30" fill="#eef1ff"/><circle cx="614" cy="730" r="28" fill="#0c1020"/>`;
+  s+=`<path d="M525 658 L525 982 M378 820 L672 820" stroke="#3d3637" stroke-width="12"/><rect x="345" y="996" width="360" height="16" fill="#463c3c"/>`;
+  /* family photo frame - fades as years pass */
+  s+=`<rect x="780" y="560" width="120" height="96" fill="#463c3c"/><rect x="792" y="572" width="96" height="72" fill="#cbbfa8" opacity=".8"/>`;
+  return s;}
+function door(t,open){
+  const x=830,y=930,w=210,h=FL-930;
+  let s=`<rect x="${x-14}" y="${y-14}" width="${w+28}" height="${h+14}" fill="#4a3f3f"/>`;
+  if(open>0) s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#c9b48e"/><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#000" opacity=".25"/>`;
+  const dw=w*(1-open*.8);
+  s+=`<rect x="${x}" y="${y}" width="${dw}" height="${h}" fill="#5a4c4b"/>`;
+  if(dw>60) s+=`<rect x="${x+16}" y="${y+24}" width="${dw-32}" height="${h*.42}" fill="none" stroke="#4a3e3d" stroke-width="5"/><rect x="${x+16}" y="${y+h*.52}" width="${dw-32}" height="${h*.42}" fill="none" stroke="#4a3e3d" stroke-width="5"/><circle cx="${x+dw-26}" cy="${y+h*.52}" r="9" fill="#c9a86a"/>`;
+  return s;}
+function lamp(){return `<path d="M100 1290 L320 1290 L250 520 L170 520 Z" fill="url(#beam)" opacity=".35"/><ellipse cx="200" cy="560" rx="380" ry="340" fill="url(#lampG)"/><rect x="196" y="560" width="8" height="${FL-560}" fill="#151214"/><ellipse cx="200" cy="${FL}" rx="50" ry="10" fill="#151214"/><path d="M140 560 L260 560 L240 470 L160 470 Z" fill="#ffe2b0"/>`;}
+function chair(){return `<g><rect x="60" y="1200" width="70" height="340" rx="20" fill="#3c4256"/><rect x="100" y="1360" width="260" height="90" rx="20" fill="#454c63"/><rect x="80" y="1420" width="300" height="70" rx="18" fill="#3c4256"/><rect x="300" y="1310" width="70" height="140" rx="20" fill="#3c4256"/><rect x="90" y="1490" width="16" height="70" fill="#2b2f3e"/><rect x="340" y="1490" width="16" height="70" fill="#2b2f3e"/></g>`;}
+function ball(x,y,r=34){return `<g filter="url(#rimD)"><circle cx="${x}" cy="${y}" r="${r}" fill="#d9302c"/></g><path d="M${x} ${y-r} Q${x+r*.45} ${y} ${x} ${y+r} M${x} ${y-r} Q${x-r*.45} ${y} ${x} ${y+r}" stroke="#8d1a17" stroke-width="3" fill="none"/><ellipse cx="${x-r*.35}" cy="${y-r*.4}" rx="${r*.25}" ry="${r*.15}" fill="#ff8a7a" opacity=".6"/>`;}
+function paper(x,y,rot=0){return `<g transform="translate(${x} ${y}) rotate(${rot})"><rect x="-60" y="-40" width="120" height="80" fill="#f4f1ea" filter="url(#rimD)"/><circle cx="-30" cy="-6" r="8" fill="none" stroke="#3a3a3a" stroke-width="3"/><path d="M-30 2 L-30 22 M-30 8 L-40 16 M-30 8 L-20 16 M-30 22 L-38 32 M-30 22 L-22 32" stroke="#3a3a3a" stroke-width="3"/><circle cx="2" cy="0" r="6" fill="none" stroke="#3a3a3a" stroke-width="3"/><path d="M2 6 L2 20 M2 20 L-4 28 M2 20 L8 28" stroke="#3a3a3a" stroke-width="3"/><circle cx="20" cy="22" r="6" fill="#d9302c"/><circle cx="38" cy="-24" r="8" fill="#f2c14e"/></g>`;}
+function bubble(x,y,txt,k){ if(k<=0) return ""; const sz=44, w=txt.length*sz*.6+60, h=sz+40, sc=eob(Math.min(1,k*1.5));
+  return `<g transform="translate(${x} ${y}) scale(${sc})" opacity="${Math.min(1,k*3)}"><rect x="${-w/2}" y="${-h}" width="${w}" height="${h}" rx="${h/2}" fill="#f4f1ea" opacity=".95"/><path d="M-14 -2 L-26 22 L6 -2 Z" fill="#f4f1ea" opacity=".95"/>${T_(0,-h/2+sz*.36,txt,sz,{c:"#1a1718",f:"Inter,sans-serif",w:800})}</g>`;}
+const bub=(t,a,b,x,y,txt)=>t>a&&t<b?bubble(x,y,txt,Pr(t,a,a+.3)*(1-Pr(t,b-.25,b))):"";
+
+/* ---- timeline ---- */
+const AGES=[[0,"AGE 5"],[6.0,"AGE 7"],[11.6,"AGE 10"],[17.0,"AGE 18"]];
+const kidS=t=> t<6?.5: t<11.6?.58: t<17?.66:.9;
+
+function scene(t){
+  let s=room(t)+lamp();
+  /* door state */
+  let dOpen=0;
+  if(t<0.6) dOpen=1-Pr(t,0,.6)*0;
+  dOpen= (t<1.0?1-Pr(t,.6,1.0):0) + (t>4.6&&t<5.8?Math.sin(Pr(t,4.6,5.8)*Math.PI):0)
+       + (t>6.0&&t<7.0?1-Pr(t,6.4,7.0):0)+(t>10.1&&t<11.3?Math.sin(Pr(t,10.1,11.3)*Math.PI):0)
+       + (t>11.6&&t<12.6?1-Pr(t,12.0,12.6):0)+(t>15.6&&t<16.9?Math.sin(Pr(t,15.6,16.9)*Math.PI):0)
+       + (t>19.2&&t<21.4?Math.sin(Pr(t,19.2,21.4)*Math.PI):0);
+  s+=door(t,clamp(dOpen));
+  s+=chair();
+  /* left-behind props on floor */
+  const ballFloor = t>=4.4 && !(t>=13.7&&t<15.5) && !(t>=24.0);
+  if(ballFloor) s+=ball(470,FL+40,32);
+  if(t>=9.6) s+=paper(640,FL+70,-8);
+
+  /* parent */
+  const sit = t<22.0;
+  let pr="";
+  if(sit){ let P=Object.assign({},SITP,{brow:-.1,blink:((t+.3)%3.6)<.12?1:0,ph:1,tilt:16,hunch:6});
+    P.fW=[312,1330]; P.bW=[300,1336];
+    const looksUp = (t>19.6&&t<20.6);
+    if(looksUp){P.tilt=-4; P.ph=0;}
+    if(t>20.6&&t<22){ P.tilt=4; P.ph=0; P.brow=1; }
+    const r=wfig(225,1385,.92,P,1); pr=r.s;
+    if(P.ph) pr+=`<ellipse cx="${r.hf[0]+10}" cy="${r.hf[1]-30}" rx="70" ry="60" fill="url(#phG)"/>`;
+  } else {
+    /* stands up, picks up ball, walks to door, cries */
+    let x=260, y=FL-168*.92, P={blink:0,brow:1,hunch:10,tilt:10};
+    if(t<22.8){ const k=eio(Pr(t,22,22.8)); x=lerp(225,270,k); y=lerp(1385,FL-168*.92,k); P.lean=lerp(30,0,k); P.lf=[lerp(90,0,k),lerp(-90,0,k)]; P.lb=[lerp(86,0,k),lerp(-86,0,k)]; }
+    else if(t<23.6){ x=lerp(270,420,Pr(t,22.8,23.6)); Object.assign(P,WALK(t,4)); }
+    else if(t<24.4){ x=420; const k=Math.sin(Pr(t,23.6,24.4)*Math.PI); P.lean=k*55; P.fW=[470,lerp(FL-150,FL+30,k)]; }
+    else if(t<26.6){ x=lerp(420,770,Pr(t,24.4,26.6)); Object.assign(P,WALK(t,3.6)); P.f=[60,90]; }
+    else { x=770; P.f=[60,90]; P.b=[-10,-6]; P.tilt=24; P.hunch=16; P.bob=Math.sin(t*9)*2*(t>27?1:0); }
+    const r=wfig(x,y,.92,P,1); pr=r.s;
+    if(t>=23.4) { const hp=t<24.4&&t>=23.6? [470,FL+30-Math.sin(Pr(t,23.6,24.4)*Math.PI)*0] : r.hf; if(t>=24.0) pr+=ball(r.hf[0]+6,r.hf[1]+18,32); }
+    if(t>26.8){ for(let i=0;i<4;i++){const st=26.9+i*.5, k=Pr(t,st,st+.7); if(k>0&&k<1) pr+=`<path d="M${r.C[0]+14} ${r.C[1]+8+k*90} q5 9 0 14 q-5 -5 0 -14" fill="#9fd0ff" opacity="${1-k}"/>`;}}
+  }
+  /* kid */
+  let kr="";
+  const S=kidS(t);
+  const kidAt=(x,P,dir)=>wfig(x,FL-168*S,S,P,dir);
+  if(t<6){ let x, P={blink:((t+1)%3)<.1?1:0,brow:.6}, dir=-1;
+    if(t<0.6) x=900; else if(t<2.0){x=lerp(900,500,Pr(t,.6,2.0)); Object.assign(P,WALK(t,7));} else if(t<4.0){x=500; P.fW=[440,FL-200*S]; P.bW=[452,FL-190*S]; if(t>3.2){P.brow=-.6;P.tilt=14;}}
+    else if(t<5.6){ x=lerp(500,920,Pr(t,4.2,5.6)); dir=1; Object.assign(P,WALK(t,5)); P.tilt=14; P.brow=-.6; } else x=-999;
+    const r=kidAt(x,P,dir); kr=r.s; if(t<4.0) kr+=ball((r.hf[0]+r.hb[0])/2-8,(r.hf[1]+r.hb[1])/2-10,30);
+    if(t>=4.0&&t<4.4){ const k=Pr(t,4,4.4); kr+=ball(lerp(440,470,k),lerp(FL-200*S,FL+40,ei(k)),30); }
+    kr+=bub(t,2.4,3.9,330,1150,"Later.");
+  }
+  else if(t<11.6){ let x, P={blink:((t+1)%3)<.1?1:0,brow:.6}, dir=-1;
+    if(t<6.6) x=900; else if(t<8.0){x=lerp(900,520,Pr(t,6.6,8.0)); Object.assign(P,WALK(t,6));} else if(t<9.6){x=520; P.fW=[455,FL-215*S]; P.bW=[470,FL-205*S]; if(t>9.0){P.brow=-.6;P.tilt=14;}}
+    else if(t<11.2){ x=lerp(520,930,Pr(t,9.9,11.2)); dir=1; if(t>9.9) Object.assign(P,WALK(t,4.6)); P.tilt=16; P.brow=-.7; if(t<9.9){P.lean=30; P.f=[60,10];} } else x=-999;
+    const r=kidAt(x,P,dir); kr=r.s; if(t<9.6) kr+=paper(r.hf[0]-30,r.hf[1]-20,8);
+    kr+=bub(t,8.3,9.6,330,1150,"Later.");
+  }
+  else if(t<17){ let x, P={blink:((t+1)%3)<.1?1:0,brow:.2}, dir=-1;
+    if(t<12.2) x=900; else if(t<13.2){ x=lerp(900,560,Pr(t,12.2,13.2)); Object.assign(P,WALK(t,5));}
+    else if(t<15.4){ x=lerp(560,500,Pr(t,13.2,13.8)); if(t<13.7){ P.lean=Math.sin(Pr(t,13.2,14.2)*Math.PI)*40; P.fW=[470,FL+10]; } else if(t<14.2){ P.lean=Math.sin(Pr(t,13.2,14.2)*Math.PI)*40; } else { P.fW=[440,FL-200*S]; P.bW=[452,FL-190*S]; } if(t>14.9){P.brow=-.8;P.tilt=18;} }
+    else if(t<16.8){ x=lerp(500,930,Pr(t,15.4,16.8)); dir=1; Object.assign(P,WALK(t,3.4)); P.tilt=20; P.brow=-.8; } else x=-999;
+    const r=kidAt(x,P,dir); kr=r.s; if(t>=13.7&&t<15.4) kr+=ball((r.hf[0]+r.hb[0])/2-8,(r.hf[1]+r.hb[1])/2-10,30);
+    if(t>=15.4&&t<15.5) kr+=ball(470,FL+40,30); kr+=bub(t,14.5,15.5,330,1150,"Later...");
+  }
+  else { /* age 18: leaves with suitcase */
+    let x, P={blink:((t+1)%3.4)<.1?1:0,brow:-.1}, dir=1;
+    if(t<17.6) x=-200; else if(t<19.4){ x=lerp(-100,820,Pr(t,17.6,19.4)); Object.assign(P,WALK(t,4.2)); }
+    else if(t<20.6){ x=820; dir=-1; P.tilt=-2; P.brow=-.2; }
+    else if(t<21.4){ x=lerp(820,1000,Pr(t,20.6,21.4)); dir=1; Object.assign(P,WALK(t,4.2)); } else x=-999;
+    if(x>-900){ const r=kidAt(x,P,dir); kr=r.s; kr+=`<g filter="url(#rimD)"><rect x="${r.hb[0]-34}" y="${r.hb[1]+4}" width="68" height="96" rx="10" fill="#6b5a4e"/></g><rect x="${r.hb[0]-14}" y="${r.hb[1]-8}" width="28" height="14" rx="5" fill="none" stroke="#141214" stroke-width="5"/>`; }
+  }
+  s+=pr+kr;
+  /* re-draw door frame front so exiting kid disappears behind it */
+  if(dOpen>0.05) s+=`<rect x="1040" y="916" width="40" height="${FL-916}" fill="#2a2526"/>`;
+  return s;}
+
+function render(t){
+  const z=1.17+Pr(t,0,28)*.06 + (t>26?Pr(t,26,28)*.15:0), cx=t>22?lerp(560,700,eio(Pr(t,24,27))):560, cy=1300;
+  let s=`<g transform="translate(540 1130) scale(${z}) translate(${-cx} ${-cy})">${scene(t)}</g>`;
+  /* age label with crossfade */
+  let cur=AGES[0], nx=null; AGES.forEach((a,i)=>{if(t>=a[0]){cur=a; nx=AGES[i+1];}});
+  const fin=Pr(t,cur[0],cur[0]+.5), fout=nx?1-Pr(t,nx[0]-.4,nx[0]):1-Pr(t,21.6,22.2);
+  s+=T_(540,250,cur[1],78,{c:"#d9d4ca",f:"Inter,sans-serif",w:800,ls:10,op:Math.min(fin,fout)});
+  /* time-pass blackouts */
+  let bo=0; [6.0,11.6,17.0].forEach(a=>{const k=Math.max(0,1-Math.abs(t-a)/.35); bo=Math.max(bo,k);});
+  if(bo>0) s+=`<rect width="1080" height="1920" fill="#000" opacity="${bo}"/>`;
+  s+=T_(540,1880,"@ROBINSMEDIA",26,{c:"#8a8380",f:"Inter,sans-serif",w:800,ls:6,op:.8});
+  const fo=Pr(t,28,29); if(fo>0) s+=`<rect width="1080" height="1920" fill="#000" opacity="${fo}"/>`;
+  document.getElementById("w").innerHTML=s;
+}
+window.render=render; render(+(new URLSearchParams(location.search).get("t")||0));
+</script></body></html>
