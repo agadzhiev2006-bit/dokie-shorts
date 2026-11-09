@@ -5,14 +5,17 @@ canvas{position:fixed;inset:0;z-index:0}
  text-shadow:0 4px 0 #000,0 -2px 0 #000,3px 0 0 #000,-3px 0 0 #000,0 6px 14px rgba(0,0,0,.4);opacity:0}
 lbl small{display:block;font-size:40px;color:#ffd08a}
 #fade{position:fixed;inset:0;background:#000;opacity:0;z-index:5}
+#cap{position:fixed;left:0;right:0;top:15%;text-align:center;z-index:4;font:900 92px 'Inter',sans-serif;color:#fff;letter-spacing:1px;line-height:1.05;
+ -webkit-text-stroke:10px #000;paint-order:stroke fill;text-shadow:0 8px 0 #000,0 10px 24px rgba(0,0,0,.45)}
+#cap b{color:#f2711c}
 #wm{position:fixed;left:0;right:0;bottom:5%;text-align:center;font:800 26px Inter,sans-serif;letter-spacing:6px;color:rgba(255,255,255,.7);z-index:4;text-shadow:0 2px 6px rgba(0,0,0,.5)}
 </style>
 <script type="importmap">{"imports":{"three":"../ls3d/lib/three.module.js"}}</script></head><body>
-<div id="wm"></div><div id="fade"></div>
+<div id="wm">@FIXALABS</div><div id="cap"></div><div id="fade"></div>
 <script type="module">
 import * as THREE from 'three';
 import {makeBuilder,poseBuilder,ARMS,COL} from './builder.js';
-const W=1080,H=1920;
+const Q=new URLSearchParams(location.search);const W=+(Q.get('w')||1080),H=+(Q.get('h')||1920);if(Q.get('w')){document.documentElement.style.width=document.body.style.width=W+'px';document.documentElement.style.height=document.body.style.height=H+'px';}
 const R=new THREE.WebGLRenderer({antialias:true,alpha:true});R.setSize(W,H);R.setPixelRatio(1);
 R.shadowMap.enabled=true;R.toneMapping=THREE.ACESFilmicToneMapping;R.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(R.domElement);
 const S=new THREE.Scene();
@@ -28,17 +31,17 @@ const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),sm=x=>{x=cl(x);return x*x*(3-2*x
 const eo=x=>1-Math.pow(1-cl(x),3);
 
 /* ---------- ground cross-section ---------- */
-const FZ=1.2, HARD=-2.0, BOT=-4.6;
+const FZ=1.2, HARD=-2.0, BOT=-10;
 const grassM=M(0x7da05a),mudM=M(0x6e4a2e),mud2M=M(0x5d3d25),hardM=M(0x7b746b),hard2M=M(0x6a645c);
-add(box(14,.12,5),grassM,[0,-.06,FZ-2.5]);
-add(box(14,-HARD-.12,5),mudM,[0,(HARD-.12)/2,FZ-2.5]);
-add(box(14,HARD-BOT,5),hardM,[0,(HARD+BOT)/2,FZ-2.5]);
+add(box(90,.12,5),grassM,[0,-.06,FZ-2.5]);
+add(box(90,-HARD-.12,5),mudM,[0,(HARD-.12)/2,FZ-2.5]);
+add(box(90,HARD-BOT,5),hardM,[0,(HARD+BOT)/2,FZ-2.5]);
 // strata details on the cut face
 let sd=3;const rnd=()=>((sd=(sd*16807)%2147483647)/2147483647);
 for(let i=0;i<26;i++)add(new THREE.DodecahedronGeometry(.12+rnd()*.12,0),i<14?mud2M:hard2M,[-6.5+rnd()*13,i<14?-.4-rnd()*1.4:HARD-.3-rnd()*2.2,FZ+.01],[rnd()*3,rnd()*3,0],[1,1,.25]);
 for(let i=0;i<6;i++)add(box(.6+rnd(),.04,.02),mud2M,[-6+rnd()*12,-.5-rnd()*1.3,FZ+.01],[0,0,(rnd()-.5)*.2]);
 // grass tufts
-for(let i=0;i<40;i++)add(new THREE.ConeGeometry(.05,.18,4),M(0x6b9448),[-6.5+rnd()*13,.08,FZ-rnd()*4.6]);
+for(let i=0;i<40;i++)add(new THREE.ConeGeometry(.05,.18,4),M(0x6b9448),[-30+rnd()*60,.08,FZ-rnd()*4.6]);
 
 /* ---------- house (sinks) ---------- */
 const house=new THREE.Group();S.add(house);house.position.set(2.2,0,.7);
@@ -113,7 +116,7 @@ function woodDepth(t){let d=.9;const hh=hits(t,HAND);d+=Math.min(hh.n,99)*.05;co
 function steelDepth(t){const h=hits(t,SH);return Math.min(.7+h.n*.42,2.75);}
 /* camera keys */
 const CK=[
- [0,[0,2.6,12.5],[.6,.4,0]],[2.0,[1.0,1.8,9.5],[1.4,.0,0]],[6.0,[1.0,1.8,9.5],[1.4,-.1,0]],
+ [0,[2.3,1.3,4.2],[2.2,.7,0]],[0.85,[0.4,2.4,11],[.8,.4,0]],[2.0,[1.0,1.8,9.5],[1.4,.0,0]],[6.0,[1.0,1.8,9.5],[1.4,-.1,0]],
  [7.0,[-.3,1.9,9.2],[-.3,.9,0]],[11.5,[-.5,1.9,9.0],[-.4,.7,0]],
  [13.5,[-.6,2.6,10.5],[-.4,1.3,0]],[21,[-.9,2.8,11.5],[-.6,1.2,0]],[22.5,[-1.2,3.0,13.5],[-.9,1.1,0]],
  [27.5,[-1.2,3.0,14],[-.9,1.2,0]],[33.5,[-.4,2.6,11.5],[-.2,.6,0]],
@@ -126,6 +129,21 @@ function camAt(t){let a=CK[0],b=CK[0];for(let i=0;i<CK.length;i++){if(CK[i][0]<=
 let shakeT=[];[...ROCK,...FR,...SH].forEach(h=>shakeT.push(h));
 
 const tmp=new THREE.Vector3(),tmp2=new THREE.Vector3();
+
+const SENT=[[0.16,1.87,["YOU WANT TO","BUILD A *HOUSE*"]],[2.33,5.91,["BUT THE GROUND","HERE IS SOFT *MUD*","AND THE HOUSE","JUST *SINKS*"]],
+[6.37,10.28,["SO YOU *HAMMER*","A WOODEN *POLE*","DEEP DOWN","UNTIL IT HITS","*HARD* GROUND"]],[10.80,12.93,["BUT HAMMERING","BY HAND","TAKES *FOREVER*"]],
+[13.28,16.44,["SO YOU LIFT","A HEAVY *ROCK*","WITH A *ROPE*","AND DROP IT","ON THE POLE"]],[16.74,17.39,["*FASTER!*"]],
+[17.84,19.92,["BUT LIFTING","THAT ROCK","IS *EXHAUSTING*"]],[20.24,21.25,["SO YOU ADD","A *PULLEY*"]],[21.55,22.63,["AND THREE *FRIENDS*"]],[22.97,24.11,["STILL *SLOW*"]],
+[24.40,26.38,["SO YOU HOOK","THE ROPE TO","A *STEAM ENGINE*"]],[26.68,30.08,["NOW THE WEIGHT","GOES UP AND DOWN","ON ITS *OWN*","ALL DAY LONG"]],
+[30.46,32.54,["BUT WOODEN POLES","*ROT* AND *CRACK*"]],[32.84,34.10,["SO YOU SWITCH","TO *STEEL*"]],
+[34.42,38.92,["STEEL NEEDS","A *HARDER* HIT","SO YOU USE","STEAM *PRESSURE*","TO *SLAM*","THE WEIGHT DOWN"]],
+[39.26,39.75,["*BOOM.*"]],[39.95,40.45,["*BOOM.*"]],[40.66,41.2,["*BOOM.*"]],
+[41.47,44.66,["AND TO KEEP","THE POLE *STRAIGHT*","YOU PUT IT","ON A TALL","*GUIDE RAIL*"]],[45.02,46.16,["*CONGRATULATIONS*"]],
+[46.39,48.36,["YOU JUST INVENTED","THE *PILE DRIVER*"]],[48.66,51.06,["AND IT ALL STARTED","WITH A *STICK*","IN THE *MUD*"]]];
+const CH=[];for(const [a,b,ch] of SENT){const wc=ch.map(c=>c.split(' ').length),tot=wc.reduce((x,y)=>x+y,0);let t0=a;
+ ch.forEach((c,i)=>{const d=(b-a)*wc[i]/tot;CH.push({t:t0,e:t0+d,html:c.replace(/\*([^*]+)\*/g,'<b>$1</b>'),kw:c.includes('*')});t0+=d;});}
+const capEl=document.getElementById('cap');
+const SC=[0.45,6.3,13.2,20.2,24.4,30.4,32.8,41.4,45.0,48.6];
 window.render=t=>{
  // house sink
  const sink=sm(Pr(t,T.sink+.6,T.sink+3.6));house.position.y=-sink*1.05;house.rotation.z=sink*.16;house.visible=t<T.steam+1||true;
@@ -210,15 +228,29 @@ window.render=t=>{
  B.root.position.set(b.x,0,b.z);B.root.rotation.y=b.yaw;poseBuilder(B,b);
  // labels
  showL('mud',t,T.sink+1.2,T.hammer+.2,[1.4,-.9,FZ]);
- showL('hard',t,T.hammer+2.2,T.slow,[-1.6,HARD-.6,FZ]);
+ showL('hard',t,T.hammer+2.2,T.slow,[-.2,HARD-.5,FZ]);
  showL('steam',t,T.steam+1,T.steam+4,[-1.9,2.7,.5]);
  showL('steel',t,T.steel+1.5,T.steel+4.5,[.9,2.6,FZ]);
  showL('rail',t,T.rail+1.4,T.reveal,[.2,4.6,FZ]);
  showL('pd',t,T.reveal+.4,T.stick,[-.4,4.6,FZ]);
  // camera + impact shake
  const c=camAt(t);let sh=0;for(const h of shakeT)if(t>=h&&t<h+.25)sh=Math.max(sh,(1-(t-h)/.25)*(t>=SH[0]?.09:.04));
- cam.position.set(c.p[0]+Math.sin(t*90)*sh,c.p[1]+Math.cos(t*77)*sh,c.p[2]);cam.lookAt(...c.l);
- document.getElementById('fade').style.opacity=Math.max(1-Pr(t,0,.5),Pr(t,T.end-.6,T.end));
+ cam.position.set(c.p[0]+Math.sin(t*90)*sh,c.p[1]+Math.cos(t*77)*sh,c.p[2]);cam.lookAt(...c.l);if(Q.get('cam')){const v=Q.get('cam').split(',').map(Number);cam.position.set(v[0],v[1],v[2]);cam.lookAt(v[3],v[4],v[5]);}
+ document.getElementById('fade').style.opacity=Pr(t,T.end-.6,T.end);
+ // captions
+ let cur=null;for(const c of CH)if(t>=c.t&&t<c.e+.08)cur=c;
+ if(cur&&t<T.end-.4){capEl.innerHTML=cur.html;const u=t-cur.t;const sc=u<.12?lerp(.6,1.12,u/.12):u<.22?lerp(1.12,1,(u-.12)/.1):1;capEl.style.transform=`scale(${sc}) rotate(${u<.2?(1-u/.2)*-3:0}deg)`;capEl.style.opacity=1;}else capEl.style.opacity=0;
+ // punch zoom on keyword chunks + gentle drift
+ let fov=38-1.5*Math.sin(t*.35);
+ for(const c of CH)if(c.kw&&t>=c.t&&t<c.t+.6){const u=(t-c.t)/.6;fov-=6*(u<.15?u/.15:Math.pow(1-(u-.15)/.85,2));}
+ // 3D whip transition between scenes: orbit swing + blur + flash
+ let blur=0,flash=0;
+ for(const ts of SC){const d=t-ts;if(Math.abs(d)<.32){const k=1-Math.abs(d)/.32;const ang=Math.sign(d||1)*-k*k*.55;
+  const lx=c.l[0],lz=c.l[2];const px=cam.position.x-lx,pz=cam.position.z-lz;const ca=Math.cos(ang),sa=Math.sin(ang);
+  cam.position.x=lx+px*ca-pz*sa;cam.position.z=lz+px*sa+pz*ca;cam.position.y+=k*k*.8;cam.lookAt(...c.l);fov+=k*k*10;blur=Math.max(blur,k*k*16);flash=Math.max(flash,Math.max(0,1-Math.abs(d)/.08)*.35);}}
+ cam.fov=fov;cam.updateProjectionMatrix();
+ R.domElement.style.filter=blur>.3?`blur(${blur.toFixed(1)}px)`:'none';
+ document.getElementById('fade').style.background=flash>0&&t>1?'#fff':'#000';if(flash>0&&t>1)document.getElementById('fade').style.opacity=flash;
  R.render(S,cam);
 };
 if(location.search.includes('nolabel'))document.head.insertAdjacentHTML('beforeend','<style>.lbl{display:none!important}</style>');window.ready=true;render(+(new URLSearchParams(location.search).get('t')||0));
