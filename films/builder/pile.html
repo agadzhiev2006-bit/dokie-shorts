@@ -1,0 +1,225 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:linear-gradient(#9fc3dd 0%,#cfe0ea 45%,#e9e4da 100%)}
+canvas{position:fixed;inset:0;z-index:0}
+.lbl{position:fixed;z-index:3;transform:translate(-50%,-50%);font:900 64px 'Inter',sans-serif;color:#fff;letter-spacing:2px;white-space:nowrap;
+ text-shadow:0 4px 0 #000,0 -2px 0 #000,3px 0 0 #000,-3px 0 0 #000,0 6px 14px rgba(0,0,0,.4);opacity:0}
+lbl small{display:block;font-size:40px;color:#ffd08a}
+#fade{position:fixed;inset:0;background:#000;opacity:0;z-index:5}
+#wm{position:fixed;left:0;right:0;bottom:5%;text-align:center;font:800 26px Inter,sans-serif;letter-spacing:6px;color:rgba(255,255,255,.7);z-index:4;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+</style>
+<script type="importmap">{"imports":{"three":"../ls3d/lib/three.module.js"}}</script></head><body>
+<div id="wm"></div><div id="fade"></div>
+<script type="module">
+import * as THREE from 'three';
+import {makeBuilder,poseBuilder,ARMS,COL} from './builder.js';
+const W=1080,H=1920;
+const R=new THREE.WebGLRenderer({antialias:true,alpha:true});R.setSize(W,H);R.setPixelRatio(1);
+R.shadowMap.enabled=true;R.toneMapping=THREE.ACESFilmicToneMapping;R.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(R.domElement);
+const S=new THREE.Scene();
+S.add(new THREE.HemisphereLight(0xeaf3ff,0x6b5a48,1.25));
+const sun=new THREE.DirectionalLight(0xfff2e0,2.4);sun.position.set(5,9,8);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-8,right:8,top:9,bottom:-5,near:1,far:40});sun.shadow.bias=-.0005;S.add(sun);
+const fill=new THREE.DirectionalLight(0xffe6d0,.7);fill.position.set(-4,3,10);S.add(fill);
+const cam=new THREE.PerspectiveCamera(38,W/H,.1,200);
+const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85,flatShading:true},o));
+const add=(g,m,p=[0,0,0],r=[0,0,0],s=[1,1,1],par=S)=>{const o=new THREE.Mesh(g,m);o.position.set(...p);o.rotation.set(...r);o.scale.set(...s);o.castShadow=o.receiveShadow=true;par.add(o);return o};
+const box=(x,y,z)=>new THREE.BoxGeometry(x,y,z),cyl=(a,b,h,n=8)=>new THREE.CylinderGeometry(a,b,h,n);
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),sm=x=>{x=cl(x);return x*x*(3-2*x)},lerp=(a,b,k)=>a+(b-a)*k,Pr=(t,a,b)=>cl((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-cl(x),3);
+
+/* ---------- ground cross-section ---------- */
+const FZ=1.2, HARD=-2.0, BOT=-4.6;
+const grassM=M(0x7da05a),mudM=M(0x6e4a2e),mud2M=M(0x5d3d25),hardM=M(0x7b746b),hard2M=M(0x6a645c);
+add(box(14,.12,5),grassM,[0,-.06,FZ-2.5]);
+add(box(14,-HARD-.12,5),mudM,[0,(HARD-.12)/2,FZ-2.5]);
+add(box(14,HARD-BOT,5),hardM,[0,(HARD+BOT)/2,FZ-2.5]);
+// strata details on the cut face
+let sd=3;const rnd=()=>((sd=(sd*16807)%2147483647)/2147483647);
+for(let i=0;i<26;i++)add(new THREE.DodecahedronGeometry(.12+rnd()*.12,0),i<14?mud2M:hard2M,[-6.5+rnd()*13,i<14?-.4-rnd()*1.4:HARD-.3-rnd()*2.2,FZ+.01],[rnd()*3,rnd()*3,0],[1,1,.25]);
+for(let i=0;i<6;i++)add(box(.6+rnd(),.04,.02),mud2M,[-6+rnd()*12,-.5-rnd()*1.3,FZ+.01],[0,0,(rnd()-.5)*.2]);
+// grass tufts
+for(let i=0;i<40;i++)add(new THREE.ConeGeometry(.05,.18,4),M(0x6b9448),[-6.5+rnd()*13,.08,FZ-rnd()*4.6]);
+
+/* ---------- house (sinks) ---------- */
+const house=new THREE.Group();S.add(house);house.position.set(2.2,0,.7);
+add(box(1.5,1.1,1.1),M(0xe9dcc6),[0,.55,0],[0,0,0],[1,1,1],house);
+add(new THREE.ConeGeometry(1.15,.75,4),M(0xc24f32),[0,1.45,0],[0,Math.PI/4,0],[1,1,.85],house);
+add(box(.3,.55,.04),M(0x6b4a33),[0,.28,.56],[0,0,0],[1,1,1],house);
+for(const s of[-1,1])add(box(.28,.26,.04),M(0x9cc8e6,{roughness:.3}),[s*.45,.66,.56],[0,0,0],[1,1,1],house);
+add(box(.18,.4,.18),M(0x8a5a40),[.4,1.75,0],[0,0,0],[1,1,1],house);
+
+/* ---------- poles, weights, frames ---------- */
+const woodM=M(0xb98552),rotM=M(0x4e3a28),steelM=M(0x9aa3ad,{metalness:.6,roughness:.35}),ropeM=M(0xd9c79a);
+const PX=0;
+const wpole=add(cyl(.085,.07,2.4,7),woodM,[PX,0,FZ]);
+const tip=add(new THREE.ConeGeometry(.07,.18,7),woodM,[0,-1.29,0],[Math.PI,0,0],[1,1,1],wpole);
+const cracks=new THREE.Group();wpole.add(cracks);for(let i=0;i<5;i++)add(box(.02,.25,.02),M(0x1b120b),[0.05*(i%2?1:-1),.9-i*.18,.07],[0,0,(i%2?.4:-.4)],[1,1,1],cracks);
+const spole=add(cyl(.09,.09,3.4,10),steelM,[PX,0,FZ]);
+const sledge=new THREE.Group();add(cyl(.025,.025,.75,6),M(0x8b5e34),[0,-.3,0],[0,0,0],[1,1,1],sledge);add(box(.12,.12,.28),M(0x3a3b40,{metalness:.5}),[0,-.68,0],[0,0,0],[1,1,1],sledge);
+const rock=add(new THREE.DodecahedronGeometry(.28,0),M(0x8d8a86),[PX,3,FZ]);
+const ram=add(box(.42,.6,.42),steelM,[PX,3,FZ]);
+// tripod
+const tripod=new THREE.Group();S.add(tripod);const APX=new THREE.Vector3(PX,3.7,FZ);
+for(const [x,z] of[[-1.1,FZ+.6],[1.1,FZ+.6],[0,FZ-1.3]]){const a=new THREE.Vector3(x,0,z);const L=a.distanceTo(APX);const l=add(cyl(.06,.07,L,6),woodM,[0,0,0],[0,0,0],[1,1,1],tripod);
+ l.position.copy(a.clone().add(APX).multiplyScalar(.5));l.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),APX.clone().sub(a).normalize());}
+const pulley=add(new THREE.TorusGeometry(.17,.05,6,12),M(0x5a5d63,{metalness:.5}),[PX-.0,3.62,FZ],[0,0,0],[1,1,1]);
+// steam engine
+const engine=new THREE.Group();S.add(engine);engine.position.set(-2.5,0,.5);
+add(cyl(.55,.55,1.5,10),M(0x3d4148,{metalness:.4,roughness:.5}),[0,.75,0],[0,0,Math.PI/2],[1,1,1],engine);
+add(box(1.7,.25,1.1),M(0x2a2c30),[0,.12,0],[0,0,0],[1,1,1],engine);
+add(cyl(.14,.17,1.3,8),M(0x2a2c30),[-.45,1.7,0],[0,0,0],[1,1,1],engine);
+const drum=add(cyl(.28,.28,.5,10),M(0xa86b3c),[.95,.75,.55],[Math.PI/2,0,0],[1,1,1],engine);
+add(cyl(.62,.62,.04,12),M(COL.orange),[0,.75,.56],[Math.PI/2,0,0],[1,1,1],engine);
+const puffs=[];for(let i=0;i<7;i++)puffs.push(add(new THREE.IcosahedronGeometry(.22,0),M(0xf2f2f2),[-.45,2.4,0],[i,i,i],[1,1,1],engine));
+// guide rail (leader) + crawler
+const leader=new THREE.Group();S.add(leader);leader.position.set(PX,0,FZ-.32);
+const LH=5.6;for(const s of[-1,1])add(box(.1,LH,.1),M(COL.orange),[s*.32,LH/2,0],[0,0,0],[1,1,1],leader);
+for(let i=0;i<14;i++){add(box(.64,.05,.06),M(COL.orange),[0,.3+i*.38,0],[0,0,0],[1,1,1],leader);add(box(.05,.5,.05),M(0xd65f10),[0,.49+i*.38,0],[0,0,(i%2?.9:-.9)],[1,1,1],leader);}
+add(box(.9,.2,.5),M(0x2a2c30),[0,LH,0],[0,0,0],[1,1,1],leader);
+const crawler=new THREE.Group();S.add(crawler);
+add(box(2.2,.45,1.6),M(0x26272b),[0,.23,0],[0,0,0],[1,1,1],crawler);
+for(const z of[-.62,.62])add(box(2.4,.5,.4),M(0x1a1b1e),[0,.25,z],[0,0,0],[1,1,1],crawler);
+add(box(1.5,.9,1.2),M(COL.orange),[-.2,.9,0],[0,0,0],[1,1,1],crawler);
+add(box(.7,.75,1.0),M(0x2c2e33),[.25,1.7,.0],[0,0,0],[1,1,1],crawler);
+add(box(.66,.45,.04),M(0x9cc8e6,{roughness:.2}),[.25,1.75,.51],[0,0,0],[1,1,1],crawler);
+add(box(.9,.12,.12),M(COL.orange),[1.0,1.1,0],[0,0,-.5],[1,1,1],crawler);
+// rope segments (stretched cylinders)
+const ropeG=cyl(.018,.018,1,5);
+function rope(o,a,b){o.visible=true;o.position.copy(a).add(b).multiplyScalar(.5);o.scale.set(1,a.distanceTo(b),1);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());}
+const rp=[0,1,2,3].map(()=>add(ropeG,ropeM));
+// stick in the mud (ending)
+const stick=add(cyl(.03,.025,.7,5),woodM,[3.9,.25,FZ+.05],[0,0,.12]);
+
+/* ---------- people ---------- */
+const B=makeBuilder(THREE);S.add(B.root);B.L[-1].hand.add(sledge);sledge.position.set(0,-.04,0);
+const friends=[0x3f6fb5,0x4c8a55,0xa8443a].map(c=>{const f=makeBuilder(THREE);f.mat.tee.color.set(c);S.add(f.root);return f});
+
+/* ---------- labels ---------- */
+const lbls={};
+function lbl(id,txt,sub){const d=document.createElement('div');d.className='lbl';d.innerHTML=txt+(sub?`<small>${sub}</small>`:'');document.body.appendChild(d);lbls[id]=d;}
+lbl('mud','SOFT MUD');lbl('hard','HARD GROUND');lbl('steam','STEAM');lbl('steel','STEEL');lbl('rail','GUIDE RAIL');lbl('pd','PILE DRIVER');
+const V=new THREE.Vector3();
+function showL(id,t,a,b,p){const d=lbls[id];const k=cl(Math.min((t-a)/.3,(b-t)/.3));d.style.opacity=k;if(k<=0)return;V.set(...p).project(cam);
+ d.style.left=((V.x+1)/2*W)+'px';d.style.top=((1-V.y)/2*H)+'px';d.style.transform=`translate(-50%,-50%) scale(${.6+.4*eo(k)})`;}
+
+/* ---------- timeline (re-timed to VO later) ---------- */
+const T={house:0,sink:2.3,hammer:6.3,slow:10.8,rock:13.2,tired:17.8,pulley:20.2,steam:24.4,rot:30.4,steel:32.8,rail:41.4,reveal:45.0,stick:48.6,end:52.3};
+window.T=T;
+// pole depth (wood) and hit list
+function hits(t,list){let n=0,last=-9;for(const h of list)if(t>=h){n++;last=h}return{n,since:t-last};}
+const HAND=[7.3,8.1,8.9,9.7,10.5],ROCK=[16.6],FR=[22.9,24.1],STEAMH=[];for(let x=25.4;x<30.4;x+=.9)STEAMH.push(x);
+const SH=[37.9,39.3,40.0,40.7];
+function woodDepth(t){let d=.9;const hh=hits(t,HAND);d+=Math.min(hh.n,99)*.05;const r=hits(t,ROCK);d+=r.n*.12;const f=hits(t,FR);d+=f.n*.12;const s=hits(t,STEAMH);d+=s.n*.065;return Math.min(d,2.25);}
+function steelDepth(t){const h=hits(t,SH);return Math.min(.7+h.n*.42,2.75);}
+/* camera keys */
+const CK=[
+ [0,[0,2.6,12.5],[.6,.4,0]],[2.0,[1.0,1.8,9.5],[1.4,.0,0]],[6.0,[1.0,1.8,9.5],[1.4,-.1,0]],
+ [7.0,[-.3,1.9,9.2],[-.3,.9,0]],[11.5,[-.5,1.9,9.0],[-.4,.7,0]],
+ [13.5,[-.6,2.6,10.5],[-.4,1.3,0]],[21,[-.9,2.8,11.5],[-.6,1.2,0]],[22.5,[-1.2,3.0,13.5],[-.9,1.1,0]],
+ [27.5,[-1.2,3.0,14],[-.9,1.2,0]],[33.5,[-.4,2.6,11.5],[-.2,.6,0]],
+ [34.5,[.5,1.6,8.8],[.3,.3,0]],[37.5,[.0,2.4,11],[0,.5,0]],[45.5,[-.4,3.4,13],[-.4,1.4,0]],
+ [50,[-1.5,4.0,15],[-.6,2.0,0]],[54,[4.5,3.6,12.5],[-.4,2.0,0]],[55.5,[4.4,1.2,6.2],[3.7,.3,0]],[58.5,[4.2,1.0,5.2],[3.8,.3,0]]];
+{const OA=[0,2.2,6.5,11,13.5,19,21.5,27,34,37,46,50,54.5,58.5],NA=[0,2.3,6.3,10.8,13.2,17.8,20.2,24.4,30.4,32.8,41.4,45,48.6,52.3];
+ const rm=x=>{for(let i=1;i<OA.length;i++)if(x<=OA[i])return lerp(NA[i-1],NA[i],(x-OA[i-1])/(OA[i]-OA[i-1]));return x-OA.at(-1)+NA.at(-1)};CK.forEach(k=>k[0]=rm(k[0]));}
+function camAt(t){let a=CK[0],b=CK[0];for(let i=0;i<CK.length;i++){if(CK[i][0]<=t)a=CK[i];if(CK[i][0]>t){b=CK[i];break}if(i===CK.length-1)b=CK[i];}
+ const k=a===b?0:sm((t-a[0])/(b[0]-a[0]));return{p:a[1].map((v,i)=>lerp(v,b[1][i],k)),l:a[2].map((v,i)=>lerp(v,b[2][i],k))};}
+let shakeT=[];[...ROCK,...FR,...SH].forEach(h=>shakeT.push(h));
+
+const tmp=new THREE.Vector3(),tmp2=new THREE.Vector3();
+window.render=t=>{
+ // house sink
+ const sink=sm(Pr(t,T.sink+.6,T.sink+3.6));house.position.y=-sink*1.05;house.rotation.z=sink*.16;house.visible=t<T.steam+1||true;
+ // which pole
+ const steel=t>=T.steel+.6;
+ const wd=woodDepth(t);wpole.position.y=1.2-wd;
+ // wood rot/crack + fall
+ const rot=Pr(t,T.rot,T.rot+1.4);wpole.material=rot>.4?rotM:woodM;cracks.visible=rot>.6;
+ if(t>T.steel){const k=Pr(t,T.steel,T.steel+.6);wpole.position.y=1.2-wd+k*3;wpole.rotation.z=-k*.6;wpole.position.x=PX+k*2.2;wpole.visible=k<1;}
+ else{wpole.rotation.z=0;wpole.position.x=PX;wpole.visible=t>=T.hammer-.2;const k=eo(Pr(t,T.hammer-.2,T.hammer+.5));wpole.position.y=lerp(4,1.2-wd,k);}
+ const sdp=steelDepth(t);spole.visible=steel;const sIn=sm(Pr(t,T.steel+.6,T.steel+1.6));spole.position.y=lerp(6,1.7-sdp,sIn);
+ const topY=steel?spole.position.y+1.7:wpole.position.y+1.2;
+ // weights
+ rock.visible=t>=T.rock&&t<T.steel;ram.visible=t>=T.steel+1.4;
+ let wY=topY+.28;
+ function lift(list,rise,amp){for(let i=0;i<list.length;i++){const h=list[i],st=h-rise;if(t>=st-.0&&t<h){const u=(t-st)/rise;return u<.82?eo(u/.82)*amp:amp*(1-Math.pow((u-.82)/.18,2));}}return 0;}
+ if(t>=T.rock&&t<T.pulley)wY+=lift(ROCK,2.0,1.6);
+ else if(t>=T.pulley&&t<T.steam)wY+=lift(FR,1.1,1.9);
+ else if(t>=T.steam&&t<T.rot)wY+=lift(STEAMH,.9,1.7);
+ rock.position.set(PX,t<T.rock+.8?lerp(0.3,topY+.28,sm(Pr(t,T.rock,T.rock+.8))):wY,FZ);rock.rotation.y=t*.3;
+ if(t<T.rock+.8)rock.position.x=lerp(-1.6,PX,sm(Pr(t,T.rock,T.rock+.8)));
+ let rY=topY+.3+(t<SH[1]-.7?lift(SH,1.1,2.3):lift(SH,.65,1.6));ram.position.set(PX,lerp(LH,rY,sm(Pr(t,T.steel+1.4,T.steel+2.4))),FZ);
+ // frames
+ const tri=t>=T.rock&&t<T.rail+1.0;tripod.visible=tri;pulley.visible=tri;
+ const triIn=sm(Pr(t,T.rock-.2,T.rock+.6));tripod.scale.y=triIn;pulley.position.y=3.62*triIn;
+ if(t>=T.rail){const k=sm(Pr(t,T.rail+.4,T.rail+1.0));tripod.scale.set(1-k,1-k,1-k);pulley.visible=k<.9;}
+ const eng=sm(Pr(t,T.steam,T.steam+.8));engine.visible=t>=T.steam;engine.scale.setScalar(eng);engine.position.x=t>=T.rail?lerp(-2.5,-1.6,sm(Pr(t,T.rail+1.0,T.rail+2.2))):-2.5;
+ engine.visible=t>=T.steam&&t<T.rail+1.1;
+ drum.rotation.y=t*3;
+ puffs.forEach((p,i)=>{const u=((t*.9+i/7)%1);p.position.set(-.45-u*.4,1.9+u*1.8,0);p.scale.setScalar(.4+u*1.3);p.visible=engine.visible&&t>T.steam+.6;});
+ const lead=sm(Pr(t,T.rail,T.rail+1.6));leader.visible=t>=T.rail;leader.scale.y=Math.max(.001,lead);
+ crawler.visible=t>=T.rail+.6;crawler.position.set(lerp(-6,-1.3,eo(Pr(t,T.rail+.6,T.rail+2.4))),0,FZ-.3);
+ // ropes
+ rp.forEach(o=>o.visible=false);
+ const wt=t<T.steel?rock:ram;const top=tmp.set(PX,wt.position.y+(t<T.steel?.25:.3),FZ);const pul=tmp2.set(PX,3.62*triIn+.17,FZ);
+ // builder + friends
+ let b={x:-1.4,z:FZ-.55,yaw:Math.PI/2,la:ARMS.idle,ra:ARMS.idle,head:[0,0,0],walk:0,ph:0,crouch:0,lean:0,brow:0};
+ friends.forEach(f=>f.root.visible=false);sledge.visible=false;
+ if(t<T.sink){b.x=-.6;b.yaw=.45;b.ra=ARMS.point;b.point='R';b.head=[0,.5,0];b.brow=.2;}
+ else if(t<T.hammer){b.x=-.6;b.yaw=.45;const k=sm(Pr(t,T.sink+1.4,T.sink+2));b.ra=k>.5?ARMS.head:ARMS.point;b.point=k<.5?'R':false;b.la=k>.5?ARMS.hip:ARMS.idle;b.brow=k;b.head=[0,lerp(.5,.1,k),.1*k];}
+ else if(t<T.rock){ // hand hammering
+  sledge.visible=true;b.x=-.78;b.z=FZ-.22;b.yaw=Math.PI/2;
+  const h=HAND.find(x=>x>t)??99, u=1-cl((h-t)/.8);
+  const sw=u<.7?eo(u/.7):1-(u-.7)/.3; // raise then slam
+  const up=[-2.7,.12,-.5],dn=[-.95,.1,-.05];const a=t>HAND[HAND.length-1]+.1?ARMS.idle:(u<.75?up.map((v,i)=>lerp(dn[i],v,eo(u/.75))):dn.map((v,i)=>lerp(up[i],v,eo((u-.75)/.25))));
+  b.ra=a;b.la=a.map((v,i)=>v*[.9,.6,1][i]);b.lean=u>.75?.25:-.05;b.head=[.2,0,0];
+  if(t>=T.slow){b.ra=ARMS.idle;b.la=ARMS.idle;sledge.visible=t<T.slow+.4;b.crouch=.28*sm(Pr(t,T.slow,T.slow+.5));b.lean=.35;b.la=[-.6,.15,-.3];b.ra=[-.6,.15,-.3];b.head=[-.2,0,0];b.brow=-.5;}
+ }
+ else if(t<T.pulley){ // pull rope alone
+  b.x=-1.5;b.yaw=Math.PI/2;const h=ROCK.find(x=>x>t)??99,u=1-cl((h-t)/2.0);
+  const pull=u<.82?eo(u/.82):0;b.lean=-.15-pull*.25;b.ra=[lerp(-2.4,-1.0,pull),.12,lerp(-.2,-1.2,pull)];b.la=[lerp(-2.0,-.9,pull),.12,lerp(-.3,-1.3,pull)];
+  if(t<T.rock+.9){b.ra=ARMS.idle;b.la=ARMS.idle;b.lean=0;}
+  if(t>=T.tired){const k=sm(Pr(t,T.tired,T.tired+.5));b.crouch=.3*k;b.lean=.4*k;b.la=[-.6,.15,-.3];b.ra=[-.6,.15,-.3];b.brow=-.6;b.head=[-.2,0,0];}
+  else if(t>=T.rock+.9){B.L[-1].hand.getWorldPosition(tmp2);rope(rp[0],top,new THREE.Vector3(PX,3.79,FZ));rope(rp[1],new THREE.Vector3(PX,3.79,FZ),tmp2.clone());}
+ }
+ else if(t<T.steam){ // with three friends
+  b.x=-1.3;b.yaw=Math.PI/2;
+  const h=FR.find(x=>x>t)??99,u=1-cl((h-t)/1.1);const pull=u<.82?eo(u/.82):0;
+  const set=(f,x,off)=>{f.root.visible=true;f.root.position.set(x,0,FZ-.55);f.root.rotation.y=Math.PI/2;
+   const p=cl(pull+off);poseBuilder(f,{lean:-.15-p*.25,ra:[lerp(-2.2,-1.0,p),.12,lerp(-.2,-1.2,p)],la:[lerp(-1.9,-.9,p),.12,lerp(-.3,-1.3,p)],brow:.3});};
+  const enter=eo(Pr(t,T.pulley+.4,T.pulley+1.4));
+  friends.forEach((f,i)=>set(f,lerp(-6,-1.85-i*.55,enter),0));
+  b.lean=-.15-pull*.25;b.ra=[lerp(-2.4,-1.0,pull),.12,lerp(-.2,-1.2,pull)];b.la=[lerp(-2.0,-.9,pull),.12,lerp(-.3,-1.3,pull)];
+  B.L[-1].hand.getWorldPosition(tmp2);rope(rp[0],top,new THREE.Vector3(PX,3.79,FZ));const end=new THREE.Vector3(-3.4,.9,FZ-.55);rope(rp[1],new THREE.Vector3(PX,3.79,FZ),end);
+  if(t>T.pulley+3.6){b.brow=-.4;}
+ }
+ else if(t<T.rail){ // steam era: engine works, people relax
+  b.x=1.2;b.z=FZ-.4;b.yaw=-.5;b.la=[-.9,-.35,-1.9];b.ra=[-.9,-.35,-1.9];b.brow=.2;b.head=[0,-.3,0];
+  const drumW=new THREE.Vector3();drum.getWorldPosition(drumW);
+  if(t<T.steel){rope(rp[0],top,new THREE.Vector3(PX,3.79,FZ));rope(rp[1],new THREE.Vector3(PX,3.79,FZ),drumW);}
+  else if(t>=T.steel+1.4){rope(rp[0],top,new THREE.Vector3(PX,3.79,FZ));rope(rp[1],new THREE.Vector3(PX,3.79,FZ),drumW);}
+  if(t>=T.rot&&t<T.steel){b.la=ARMS.hip;b.ra=ARMS.think;b.brow=-.5;b.head=[.3,-.5,0];b.yaw=-.9;}
+  if(t>=T.steel){b.la=ARMS.idle;b.ra=ARMS.point;b.point='R';b.yaw=-1.3;b.head=[-.1,-.2,0];b.brow=.4;}
+  if(t>=SH[0]-.2&&t<SH[SH.length-1]+.4){b.la=[-2.4,.6,-2.2];b.ra=[-2.4,.6,-2.2];b.point=false;b.brow=1;} // covers ears
+ }
+ else { // rail + reveal + end
+  b.x=1.4;b.z=FZ-.1;b.yaw=-.6;b.ra=ARMS.point;b.point='R';b.brow=.3;b.head=[-.2,-.3,0];
+  if(t>=T.reveal+.6){const k=Math.sin((t-T.reveal)*7);b.la=ARMS.up;b.ra=ARMS.up;b.point=false;b.brow=1;b.jump=Math.max(0,k)*.12;b.yaw=-.2;}
+  if(t>=T.stick){b.x=2.9;b.z=FZ-.9;b.yaw=.9;b.la=ARMS.idle;b.ra=[-.7,.1,-.3];b.jump=0;b.brow=.2;b.head=[.45,.3,0];}
+  if(t>=T.rail+1.2&&t<T.stick){rope(rp[0],top,new THREE.Vector3(PX,LH,FZ-.0));}
+ }
+ B.root.position.set(b.x,0,b.z);B.root.rotation.y=b.yaw;poseBuilder(B,b);
+ // labels
+ showL('mud',t,T.sink+1.2,T.hammer+.2,[1.4,-.9,FZ]);
+ showL('hard',t,T.hammer+2.2,T.slow,[-1.6,HARD-.6,FZ]);
+ showL('steam',t,T.steam+1,T.steam+4,[-1.9,2.7,.5]);
+ showL('steel',t,T.steel+1.5,T.steel+4.5,[.9,2.6,FZ]);
+ showL('rail',t,T.rail+1.4,T.reveal,[.2,4.6,FZ]);
+ showL('pd',t,T.reveal+.4,T.stick,[-.4,4.6,FZ]);
+ // camera + impact shake
+ const c=camAt(t);let sh=0;for(const h of shakeT)if(t>=h&&t<h+.25)sh=Math.max(sh,(1-(t-h)/.25)*(t>=SH[0]?.09:.04));
+ cam.position.set(c.p[0]+Math.sin(t*90)*sh,c.p[1]+Math.cos(t*77)*sh,c.p[2]);cam.lookAt(...c.l);
+ document.getElementById('fade').style.opacity=Math.max(1-Pr(t,0,.5),Pr(t,T.end-.6,T.end));
+ R.render(S,cam);
+};
+if(location.search.includes('nolabel'))document.head.insertAdjacentHTML('beforeend','<style>.lbl{display:none!important}</style>');window.ready=true;render(+(new URLSearchParams(location.search).get('t')||0));
+</script></body></html>

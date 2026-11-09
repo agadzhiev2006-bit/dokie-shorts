@@ -1,0 +1,123 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>*{margin:0;padding:0}html,body{width:1080px;height:1920px;overflow:hidden;background:#07080c}svg{position:absolute;left:0;top:0}
+#grain{position:absolute;inset:0;opacity:.06;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(90% 60% at 50% 55%,transparent 45%,rgba(0,0,0,.7) 100%)}
+</style></head><body>
+<svg id="sv" width="1080" height="1920"><defs>
+ <filter id="rimD" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/><feFlood flood-color="#121216"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="rim" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#121216"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <radialGradient id="phG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#9fe0ff" stop-opacity=".6"/><stop offset="1" stop-color="#9fe0ff" stop-opacity="0"/></radialGradient>
+ <radialGradient id="shad" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+ <radialGradient id="moonG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#cfe0ff" stop-opacity=".35"/><stop offset="1" stop-color="#cfe0ff" stop-opacity="0"/></radialGradient>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0f19"/><stop offset=".55" stop-color="#1a2233"/><stop offset="1" stop-color="#2b3448"/></linearGradient>
+ <linearGradient id="abyss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2232" stop-opacity=".0"/><stop offset=".25" stop-color="#0b0d14"/><stop offset="1" stop-color="#000"/></linearGradient>
+ <linearGradient id="face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#26252b"/><stop offset="1" stop-color="#0c0c0f"/></linearGradient>
+ <linearGradient id="top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2a31"/><stop offset="1" stop-color="#36353d"/></linearGradient>
+</defs><g id="w"></g></svg>
+<div id="vig"></div><div id="grain"></div>
+<script src="../tomorrow/man.js"></script>
+<script src="../tomorrow/rig.js"></script>
+<script src="figlib.js"></script>
+<script src="anim.js"></script>
+<script>
+const DUR=22.5, EDGE=760, WHITE="#f4f1ea";
+const ROWS=[ /* back -> front */
+  {fl:1450,s:.72,v:82,col:"#77757c",sp:215,min:-650,max:735},
+ {fl:1515,s:.86,v:100,col:"#9a979d",sp:240}];
+const FLH=1565, HS=.92, HY=FLH-168*HS;
+function tint(r,col,rim="rimD"){return r.s.replaceAll('url(#rim)',`url(#${rim})`).replaceAll('#efe8d6','#151316').replaceAll('#8b9098','#4a4446');}
+
+/* crowd */
+const crowd=[];
+ROWS.forEach((R,ri)=>{
+ if(ri<1){let x=R.max;let i=0;while(x>R.min){crowd.push({row:ri,x0:x+(hash(i*7+ri)-.5)*30,seed:hash(i+ri*13)*6});x-=R.sp*(.85+hash(i*3+ri)*.35);i++;}}
+ else{const gx=-480;for(let k=-2;k<=5;k++)crowd.push({row:1,x0:gx+k*240,seed:k*1.7,G:k===0});}
+});
+const G=crowd.find(c=>c.G);
+function crowdState(c,t){const R=ROWS[c.row],x=c.x0+R.v*t,te=(EDGE-c.x0)/R.v;return {R,x,te,fall:t>te?t-te:0};}
+function crowdFig(c,t){
+ const {R,x,te,fall}=crowdState(c,t), s=R.s, hipY=R.fl-168*s;
+ if(!fall){const ph=x/(96*s)*Math.PI+c.seed, sw=Math.sin(ph);
+  const P={col:R.col,eyes:0,tilt:24,hunch:5,bob:-Math.abs(Math.cos(ph))*6,lean:3,
+   lf:[sw*24,-Math.max(0,-sw)*38-6],lb:[-sw*24,-Math.max(0,sw)*38-6],
+   fW:[x+56*s,hipY-58*s],bW:[x+40*s,hipY-54*s]};
+  const r=fig(x,hipY,s,P,1);
+  const hx=(r.hf[0]+r.hb[0])/2, hy=(r.hf[1]+r.hb[1])/2;
+  return {s:`<ellipse cx="${x}" cy="${R.fl+4}" rx="${62*s}" ry="${8*s}" fill="url(#shad)"/>`+tint(r)+
+   `<ellipse cx="${hx+6*s}" cy="${hy-24*s}" rx="${70*s}" ry="${58*s}" fill="url(#phG)" opacity="${.75+.2*Math.sin(t*4+c.seed)}"/>`+
+   `<rect x="${hx-11*s}" y="${hy-36*s}" width="${22*s}" height="${38*s}" rx="${4*s}" fill="#15161a" stroke="#c6ecff" stroke-width="${3*s}" transform="rotate(-12 ${hx} ${hy-16*s})"/>`,r,x,hipY,fall:0};}
+ /* falling */
+ const fx=EDGE+R.v*1.1*fall, fy=hipY+900*fall*fall, rot=Math.min(200,fall*70+fall*fall*260), w=Math.sin(fall*16+c.seed);
+ const P={col:R.col,eyes:0,tilt:-10,f:[150+w*30,30],b:[-150-w*30,-30],lf:[30+w*25,-40],lb:[-30-w*25,-50]};
+ const r=fig(fx,fy,s,P,1);
+ return {s:fy<2600?`<g transform="rotate(${rot} ${fx} ${fy})">${tint(r)}</g>`:"",r,x:fx,hipY:fy,fall};
+}
+
+/* hero track */
+const ph0={fR:[52,-80],bR:[36,-74],tilt:22,hunch:4};
+const HERO=KF([
+ Object.assign({t:0,x:40,y:HY,s:HS,dir:1,walk:1,brow:0},ph0),
+ {t:4.4,x:520,ez:"lin"},{t:4.65,x:532,walk:0,ez:"o"},
+ {t:4.95,tilt:32,brow:.8,fR:[56,-82],bR:[40,-76]},{t:5.1,fR:[48,-78]},{t:5.25,fR:[58,-84]},{t:5.4,fR:[50,-80]},
+ {t:5.75,tilt:-12,brow:1.3,ez:"o"},
+ {t:6.15,lean:-10,x:510,fR:[30,-172],bR:[-26,-170],brow:1.7,tilt:-4,ez:"back"},
+ {t:6.9},{t:7.25,dir:-1,lean:0},
+ {t:7.6,fR:[70,-205],bR:[44,-195],brow:1.5,tilt:-6,ez:"back"},
+ {t:7.9,fR:[84,-222],bR:[40,-185]},{t:8.2,fR:[62,-195],bR:[56,-215]},{t:8.5,fR:[84,-222],bR:[40,-185]},{t:8.8,fR:[62,-195],bR:[56,-215]},
+ {t:9.1,fR:[76,-210],bR:[48,-198]},
+ {t:9.6},{t:9.95,dir:1,fR:[40,-120],bR:[20,-80]},{t:10.6,walk:0},
+ {t:10.7,walk:1,x:525,ez:"i"},{t:11.6,x:610,ez:"lin"},{t:11.75,walk:0,x:615,lean:-6,ez:"o"},{t:11.85,walk:0},
+ {t:11.95,walk:1,x:628,lean:12,fR:[96,-140],bR:[30,-70],ez:"i"},{t:12.4,x:690,ez:"lin"},{t:12.6,x:700,walk:0,lean:30,tilt:24,fR:[108,-40],bR:[40,-60],ez:"o"},
+ {t:13.4},{t:13.7,lean:0,tilt:0},{t:14.0,dir:-1},
+ {t:14.35,fR:[70,-205],bR:[44,-195],brow:1.5,tilt:-6,ez:"back"},
+ {t:14.7,fR:[84,-222],bR:[40,-185]},{t:15.0,fR:[62,-195],bR:[56,-215]},{t:15.3,fR:[84,-222],bR:[40,-185]},{t:15.6,fR:[62,-195],bR:[56,-215]},{t:15.9,fR:[76,-210],bR:[48,-198]},
+ {t:17.0},{t:17.6,fR:[34,-60],bR:[20,-58],tilt:8},
+ {t:18.0,dir:1},{t:19.0,f:[4,2],b:[-4,-2],hunch:18,tilt:30,brow:-.8,ez:"io"},{t:23}
+]);
+/* G reach: hero hand goes to G's shoulder 9.25-10.25 */
+
+function scene(t){
+ let s=`<rect x="-600" y="-200" width="2400" height="2400" fill="url(#sky)"/>`;
+ for(let i=0;i<40;i++) s+=`<circle cx="${-200+hash(i)*1500}" cy="${80+hash(i+50)*900}" r="${1+hash(i+9)*1.8}" fill="#dfe6ff" opacity="${.25+.45*Math.abs(Math.sin(t*.7+i))}"/>`;
+ s+=`<circle cx="840" cy="830" r="160" fill="url(#moonG)"/><circle cx="840" cy="830" r="46" fill="#e9eefb"/><circle cx="858" cy="820" r="42" fill="#121827"/>`;
+ s+=`<path d="M-600 1300 L-300 1150 L-80 1240 L180 1110 L420 1230 L640 1150 L900 1260 L1200 1170 L1600 1300 L1600 1400 L-600 1400Z" fill="#1d2433"/>`;
+ s+=`<path d="M-600 1340 L-200 1250 L120 1310 L460 1240 L760 1320 L1100 1260 L1600 1340 L1600 1420 L-600 1420Z" fill="#171c28"/>`;
+ /* abyss */
+ s+=`<rect x="${EDGE}" y="1330" width="1200" height="1400" fill="url(#abyss)"/>`;
+ /* plateau top + cliff face */
+ s+=`<path d="M-700 1375 L${EDGE-6} 1375 L${EDGE+4} 1395 L${EDGE} 1580 L-700 1580Z" fill="url(#top)"/>`;
+ s+=`<path d="M-700 1575 L${EDGE} 1575 L${EDGE+14} 1640 L${EDGE-6} 1760 L${EDGE+18} 1900 L${EDGE-10} 2100 L${EDGE+6} 2400 L-700 2400Z" fill="url(#face)"/>`;
+ s+=`<path d="M${EDGE} 1378 L${EDGE+5} 1395 L${EDGE+2} 1580 L${EDGE+14} 1640" stroke="#4a4852" stroke-width="5" fill="none"/>`;
+ for(let i=0;i<7;i++) s+=`<path d="M-700 ${1640+i*95+hash(i)*30} Q${EDGE*.4} ${1620+i*95} ${EDGE-10} ${1650+i*95+hash(i+3)*20}" stroke="#1a191e" stroke-width="4" fill="none" opacity=".7"/>`;
+ /* crowd by rows, hero lane in front */
+ const figs={0:"",1:""}, falls={0:"",1:""};let Gr=null;
+ for(const c of crowd){const o=crowdFig(c,t); if(o.fall) falls[c.row]+=o.s; else figs[c.row]+=o.s; if(c.G) Gr=o;}
+ s+=falls[0]+falls[1];
+ s+=figs[0]+figs[1];
+ /* hero */
+ const P=pose(HERO,t,.4);
+ if(t>10.6&&t<11.9&&Gr&&!Gr.fall){const k=EZ.io(Pr(t,10.6,10.9))*(1-EZ.io(Pr(t,11.5,11.8)));
+  if(k>0){P.fW=[lerp(P.x+40*HS,Gr.r.S[0]+8,k),lerp(HY-120*HS,Gr.r.S[1]+10,k)];P.fBend=-1;P.brow=1.8;}}
+ const hr=fig(P.x,P.y,P.s,Object.assign({col:WHITE},P),P.dir);
+ s+=`<ellipse cx="${P.x}" cy="${FLH+4}" rx="${66*HS}" ry="${9*HS}" fill="url(#shad)"/>`+tint(hr);
+ /* hero phone: glowing until 4.6, dead after, dropped at 6.15 */
+ const hx=(hr.hf[0]+hr.hb[0])/2, hy=(hr.hf[1]+hr.hb[1])/2;
+ if(t<6.15){const on=t<4.55?1:0;
+  if(on) s+=`<ellipse cx="${hx+6}" cy="${hy-28}" rx="70" ry="58" fill="url(#phG)" opacity=".85"/>`;
+  s+=`<rect x="${hx-11}" y="${hy-36}" width="22" height="38" rx="4" fill="#15161a" stroke="${on?"#c6ecff":"#3a3a40"}" stroke-width="3" transform="rotate(-12 ${hx} ${hy-16})"/>`;}
+ else {const d=t-6.15, py=Math.min(FLH-4, 1300+1400*d*d), px=550+60*Math.min(d,.5), rr=Math.min(90,d*300);
+  s+=`<rect x="${px-11}" y="${py-38}" width="22" height="38" rx="4" fill="#15161a" stroke="#3a3a40" stroke-width="3" transform="rotate(${rr} ${px} ${py-19})"/>`;}
+ /* sweat drops on shock */
+ if(t>6.1&&t<7.2){const k=Pr(t,6.1,7.2);s+=`<path d="M${hr.C[0]-40} ${hr.C[1]-30+k*30} q-6 10 0 16 q6 -6 0 -16" fill="#a9d6ff" opacity="${1-k}"/>`;}
+ return s;}
+
+function render(t){
+ const zk=EZ.io(Pr(t,17.6,21.5)), z=lerp(1.35,1.8,zk), cx=lerp(520,690,zk), cy=lerp(1450,1420,zk);
+ let s=`<g transform="translate(540 1130) scale(${z}) translate(${-cx} ${-cy})">${scene(t)}</g>`;
+ s+=T_(540,1880,"@ROBINSMEDIA",26,{c:"#8a8f9c",f:"Inter,sans-serif",w:800,ls:6,op:.8});
+ const fi=1-EZ.o(Pr(t,0,.6)); if(fi>0) s+=`<rect width="1080" height="1920" fill="#000" opacity="${fi}"/>`;
+ const fo=EZ.io(Pr(t,21.6,22.5)); if(fo>0) s+=`<rect width="1080" height="1920" fill="#000" opacity="${fo}"/>`;
+ document.getElementById("w").innerHTML=s;
+}
+window.render=render; render(+(new URLSearchParams(location.search).get("t")||0)); window.ready=true;
+</script></body></html>

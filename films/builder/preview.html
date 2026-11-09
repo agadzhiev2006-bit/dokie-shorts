@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;overflow:hidden;background:#6f6f72}
+#t{position:fixed;left:0;right:0;top:24px;text-align:center;font:800 34px Inter,sans-serif;color:#fff;letter-spacing:3px}</style>
+<script type="importmap">{"imports":{"three":"../ls3d/lib/three.module.js"}}</script></head><body>
+<script type="module">
+import * as THREE from 'three';
+import {makeBuilder,poseBuilder,ARMS} from './builder.js';
+const R=new THREE.WebGLRenderer({antialias:true});R.setSize(innerWidth,innerHeight);R.setPixelRatio(1);
+R.shadowMap.enabled=true;R.toneMapping=THREE.ACESFilmicToneMapping;R.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(R.domElement);
+const S=new THREE.Scene();S.background=new THREE.Color(0x6f6f72);
+S.add(new THREE.HemisphereLight(0xffffff,0x55555a,1.3));
+const d=new THREE.DirectionalLight(0xffffff,2.3);d.position.set(3,6,6);d.castShadow=true;d.shadow.mapSize.set(2048,2048);
+Object.assign(d.shadow.camera,{left:-6,right:6,top:4,bottom:-2});S.add(d);const fl=new THREE.DirectionalLight(0xffe8d8,.9);fl.position.set(-2,2,8);S.add(fl);
+const f=new THREE.Mesh(new THREE.PlaneGeometry(30,10),new THREE.ShadowMaterial({opacity:.25}));f.rotation.x=-Math.PI/2;f.receiveShadow=true;S.add(f);
+const P=[
+ [{},0],
+ [{},Math.PI],
+ [{walk:1,ph:1.2},Math.PI/2],
+ [{ra:[-1.35,.85,0],point:'R',head:[0,-.5,0],brow:.3},0],
+ [{ra:ARMS.think,head:[0,0,.12],brow:-.6},0],
+ [{la:ARMS.up,ra:ARMS.up,brow:1,jump:.05},0],
+];
+P.forEach(([p,ry],i)=>{const b=makeBuilder(THREE);b.root.position.x=(i-2.5)*1.0;b.root.rotation.y=ry;poseBuilder(b,p);S.add(b.root);});
+const cam=new THREE.PerspectiveCamera(22,innerWidth/innerHeight,.1,100);cam.position.set(0,1.0,8.2);cam.lookAt(0,.95,0);if(location.search.includes('close')){cam.position.set(-2.5,1.75,2.2);cam.lookAt(-2.5,1.72,0);}
+window.render=()=>R.render(S,cam);render();window.ready=true;
+</script></body></html>
